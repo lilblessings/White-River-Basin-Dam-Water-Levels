@@ -17,30 +17,18 @@
             "data": [
                 {
                     "date": "June 10, 2025",
-                    "waterLevel": "544.00",
+                    "waterLevel": "576.8",
                     "liveStorage": "1,983,000",
-                    "storagePercentage": "114.74",
+                    "storagePercentage": "113.05",
                     "inflow": "N/A",
                     "powerHouseDischarge": "N/A",
                     "spillwayRelease": "0",
                     "totalOutflow": "N/A",
-                    "rainfall": "0.00",
+                    "rainfall": "N/A",
                     "tailwaterElevation": "N/A",
                     "powerGeneration": "N/A",
                     "changeIn24Hours": "N/A",
-                    "dataSource": "Army Corps of Engineers, USLakes.info"
-                },
-                {
-                    "date": "June 10, 2025",
-                    "waterLevel": "578.7",
-                    "liveStorage": "1,983,000",
-                    "storagePercentage": "114.05",
-                    "inflow": "N/A",
-                    "powerHouseDischarge": "N/A",
-                    "spillwayRelease": "N/A",
-                    "totalOutflow": "N/A",
-                    "rainfall": "N/A",
-                    "dataSource": "USLakes Historical"
+                    "dataSource": "Army Corps of Engineers"
                 }
             ]
         }
