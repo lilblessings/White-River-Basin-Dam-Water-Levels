@@ -12,35 +12,6 @@
     "latitude": 36.2483333,
     "longitude": -92.24,
     "data": [
-        {
-            "date": "10JUN2025 1200",
-            "waterLevel": "576.80",
-            "liveStorage": "2,490,055",
-            "storagePercentage": "96.51",
-            "inflow": "N/A",
-            "powerHouseDischarge": "2443",
-            "spillwayRelease": "0",
-            "totalOutflow": "2443",
-            "rainfall": "N/A",
-            "tailwaterElevation": "375.97",
-            "powerGeneration": "37",
-            "changeIn24Hours": "N/A",
-            "dataSource": "Army Corps of Engineers"
-        },
-        {
-            "date": "10JUN2025 1100",
-            "waterLevel": "576.80",
-            "liveStorage": "1,983,000",
-            "storagePercentage": "113.05",
-            "inflow": "N/A",
-            "powerHouseDischarge": "2447",
-            "spillwayRelease": "0",
-            "totalOutflow": "2447",
-            "rainfall": "N/A",
-            "tailwaterElevation": "375.96",
-            "powerGeneration": "37",
-            "changeIn24Hours": "N/A",
-            "dataSource": "Army Corps of Engineers"
-        }
+        
     ]
 }
