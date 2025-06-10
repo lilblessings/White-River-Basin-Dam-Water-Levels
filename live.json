@@ -17,13 +17,13 @@
             "data": [
                 {
                     "date": "June 10, 2025",
-                    "waterLevel": "576.8",
+                    "waterLevel": "576.80",
                     "liveStorage": "1,983,000",
                     "storagePercentage": "113.05",
                     "inflow": "N/A",
                     "powerHouseDischarge": "N/A",
                     "spillwayRelease": "0",
-                    "totalOutflow": "N/A",
+                    "totalOutflow": "2447",
                     "rainfall": "N/A",
                     "tailwaterElevation": "N/A",
                     "powerGeneration": "N/A",
