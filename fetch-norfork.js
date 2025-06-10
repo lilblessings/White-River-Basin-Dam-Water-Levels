@@ -15,18 +15,29 @@ const Names = {
 };
 
 // Dam specifications based on US Army Corps of Engineers and USGS data
+// All values in imperial units for US dams
 const damSpecs = {
   'norfork': {
-    MWL: '590.00', // Maximum Water Level (top of dam)
-    FRL: '552.00', // Full Recreation Level (normal conservation pool)
-    floodPool: '580.00', // Top of flood pool
+    MWL: '590.00', // Maximum Water Level (top of dam) - feet
+    MWLUnit: 'ft',
+    FRL: '552.00', // Full Recreation Level (normal conservation pool) - feet
+    FRLUnit: 'ft',
+    floodPool: '580.00', // Top of flood pool - feet
+    floodPoolUnit: 'ft',
     liveStorageAtFRL: '1,983,000', // acre-feet at conservation pool (552 ft)
-    ruleLevel: '552.00', // Rule curve level
-    blueLevel: '552.00', // Recreation level
-    orangeLevel: '570.00', // Action level
-    redLevel: '580.00', // Flood pool
-    deadStorageLevel: '380.00', // Approximate dead storage level
-    surfaceArea: '22,000' // acres at normal pool
+    liveStorageAtFRLUnit: 'acre-ft',
+    ruleLevel: '552.00', // Rule curve level - feet
+    ruleLevelUnit: 'ft',
+    blueLevel: '552.00', // Recreation level - feet
+    blueLevelUnit: 'ft',
+    orangeLevel: '570.00', // Action level - feet
+    orangeLevelUnit: 'ft',
+    redLevel: '580.00', // Flood pool - feet
+    redLevelUnit: 'ft',
+    deadStorageLevel: '380.00', // Approximate dead storage level - feet
+    deadStorageLevelUnit: 'ft',
+    surfaceArea: '22,000', // acres at normal pool
+    surfaceAreaUnit: 'acres'
   }
 };
 
