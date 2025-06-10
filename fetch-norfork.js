@@ -81,7 +81,7 @@ const calculateStoragePercentage = (waterLevel, specs) => {
 
 // Live storage calculation with 580 ft as 100% reference
 const calculateLiveStorage = (waterLevel, specs) => {
-  if (!waterLevel || !specs) return 'N/A';
+  if (!waterLevel || !specs) return '0';
   
   const level = parseFloat(waterLevel);
   const frl = parseFloat(specs.FRL); // 552.00 ft (conservation pool)
@@ -125,6 +125,95 @@ const extractNumericValue = (text) => {
   const number = parseFloat(cleaned);
   
   return isNaN(number) ? null : number.toString();
+};
+
+// Fetch rainfall data from Weather.gov API for Mountain Home, AR (nearest to Norfork Dam)
+const fetchRainfallData = async () => {
+  try {
+    console.log('Fetching rainfall data from Weather.gov...');
+    
+    // Mountain Home, AR coordinates (close to Norfork Dam)
+    const lat = 36.3345;
+    const lon = -92.3835;
+    
+    // Get current weather data
+    const weatherUrl = `https://api.weather.gov/points/${lat},${lon}`;
+    
+    const pointResponse = await axios.get(weatherUrl, {
+      headers: {
+        'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+        'Accept': 'application/json'
+      },
+      timeout: 10000
+    });
+
+    const forecastUrl = pointResponse.data.properties.forecast;
+    const observationStationsUrl = pointResponse.data.properties.observationStations;
+    
+    // Get observation stations
+    const stationsResponse = await axios.get(observationStationsUrl, {
+      headers: {
+        'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+        'Accept': 'application/json'
+      },
+      timeout: 10000
+    });
+
+    if (stationsResponse.data.features && stationsResponse.data.features.length > 0) {
+      // Get the nearest station
+      const nearestStation = stationsResponse.data.features[0].id;
+      console.log('Using weather station:', nearestStation);
+      
+      // Get latest observations
+      const observationsUrl = `https://api.weather.gov/stations/${nearestStation}/observations/latest`;
+      
+      const obsResponse = await axios.get(observationsUrl, {
+        headers: {
+          'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+          'Accept': 'application/json'
+        },
+        timeout: 10000
+      });
+
+      const observation = obsResponse.data.properties;
+      
+      // Get precipitation data (usually in mm, convert to inches)
+      let rainfall = '0';
+      
+      if (observation.precipitationLastHour && observation.precipitationLastHour.value !== null) {
+        // Convert mm to inches (1 mm = 0.0393701 inches)
+        const rainfallMm = observation.precipitationLastHour.value;
+        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
+        rainfall = rainfallInches;
+        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last hour`);
+      } else if (observation.precipitationLast3Hours && observation.precipitationLast3Hours.value !== null) {
+        // Use 3-hour precipitation if 1-hour not available
+        const rainfallMm = observation.precipitationLast3Hours.value;
+        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
+        rainfall = rainfallInches;
+        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last 3 hours`);
+      } else if (observation.precipitationLast6Hours && observation.precipitationLast6Hours.value !== null) {
+        // Use 6-hour precipitation as fallback
+        const rainfallMm = observation.precipitationLast6Hours.value;
+        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
+        rainfall = rainfallInches;
+        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last 6 hours`);
+      } else {
+        console.log('No recent precipitation data available');
+        rainfall = '0';
+      }
+
+      return rainfall;
+    }
+
+    console.log('No weather stations found, returning 0');
+    return '0';
+
+  } catch (error) {
+    console.error('Error fetching rainfall data:', error.message);
+    // Return 0 if weather data unavailable
+    return '0';
+  }
 };
 
 // Fetch data from Army Corps of Engineers official Norfork Dam page
@@ -431,8 +520,11 @@ const fetchNorforkDamData = async () => {
   try {
     console.log('Fetching Norfork Dam data...');
 
-    // Fetch data from Corps source only
-    const corpsData = await fetchCorpsData();
+    // Fetch data from Corps source and rainfall data
+    const [corpsData, rainfallData] = await Promise.all([
+      fetchCorpsData(),
+      fetchRainfallData()
+    ]);
 
     if (!corpsData || !corpsData.poolElevation) {
       console.log('❌ No valid Corps data available');
@@ -468,20 +560,21 @@ const fetchNorforkDamData = async () => {
         waterLevel: waterLevel,
         liveStorage: liveStorage,
         storagePercentage: storagePercentage,
-        inflow: corpsData.inflow || 'N/A',
-        powerHouseDischarge: corpsData.powerHouseDischarge || 'N/A',
+        inflow: corpsData.inflow || '0', // Changed from 'N/A' to '0'
+        powerHouseDischarge: corpsData.powerHouseDischarge || '0',
         spillwayRelease: corpsData.spillwayRelease || '0',
-        totalOutflow: corpsData.totalOutflow || 'N/A',
-        rainfall: 'N/A',
-        tailwaterElevation: corpsData.tailwaterElevation || 'N/A',
-        powerGeneration: corpsData.powerGeneration || 'N/A',
-        changeIn24Hours: corpsData.changeIn24Hours || 'N/A',
+        totalOutflow: corpsData.totalOutflow || '0',
+        rainfall: rainfallData || '0', // Use actual rainfall data or '0'
+        tailwaterElevation: corpsData.tailwaterElevation || '0',
+        powerGeneration: corpsData.powerGeneration || '0',
+        changeIn24Hours: corpsData.changeIn24Hours || '0',
         dataSource: 'Army Corps of Engineers'
       }]
     };
 
     console.log(`✅ Water Level: ${waterLevel} ft MSL`);
     console.log(`✅ Storage: ${storagePercentage}% of capacity`);
+    console.log(`✅ Rainfall: ${rainfallData} inches`);
     
     if (corpsData.spillwayRelease && parseFloat(corpsData.spillwayRelease) > 0) {
       console.log(`⚠️  Spillway Release: ${corpsData.spillwayRelease} CFS`);
@@ -525,6 +618,7 @@ async function fetchDamDetails() {
     console.log('- Name:', dam.name);
     console.log('- Water Level:', dam.data[0].waterLevel);
     console.log('- Date:', dam.data[0].date);
+    console.log('- Rainfall:', dam.data[0].rainfall);
     console.log('- Data Source:', dam.data[0].dataSource);
 
     // Load existing data
@@ -643,5 +737,6 @@ if (require.main === module) {
 module.exports = {
   fetchDamDetails,
   fetchNorforkDamData,
-  fetchCorpsData
+  fetchCorpsData,
+  fetchRainfallData
 };
