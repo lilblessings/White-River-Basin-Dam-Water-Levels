@@ -26,7 +26,7 @@ const damSpecs = {
     floodPoolUnit: 'ft',
     liveStorageAtFRL: '2,580,000', // acre-feet at conservation pool (552 ft)
     liveStorageAtFRLUnit: 'acre-ft',
-    ruleLevel: '552.00', // Rule curve level - feet
+    ruleLevel: '510.00', // Rule curve level - feet
     ruleLevelUnit: 'ft',
     blueLevel: '552.00', // Recreation level - feet
     blueLevelUnit: 'ft',
