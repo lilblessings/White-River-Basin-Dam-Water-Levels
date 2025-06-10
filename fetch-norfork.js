@@ -127,36 +127,40 @@ const extractNumericValue = (text) => {
   return isNaN(number) ? null : number.toString();
 };
 
-// Fetch rainfall data from Weather.gov API for Mountain Home, AR (nearest to Norfork Dam)
+// Fetch rainfall data with multiple fallback options
 const fetchRainfallData = async () => {
+  // Try Weather.gov API first, then fallback to simpler options
+  
   try {
     console.log('Fetching rainfall data from Weather.gov...');
     
-    // Mountain Home, AR coordinates (close to Norfork Dam)
-    const lat = 36.3345;
-    const lon = -92.3835;
+    // Use more precise Norfork Dam coordinates
+    const lat = 36.2483;
+    const lon = -92.2400;
+    
+    console.log(`Trying coordinates: ${lat}, ${lon}`);
     
     // Get current weather data
     const weatherUrl = `https://api.weather.gov/points/${lat},${lon}`;
     
     const pointResponse = await axios.get(weatherUrl, {
       headers: {
-        'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+        'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
         'Accept': 'application/json'
       },
-      timeout: 10000
+      timeout: 8000
     });
 
-    const forecastUrl = pointResponse.data.properties.forecast;
+    console.log('✅ Got point data from Weather.gov');
     const observationStationsUrl = pointResponse.data.properties.observationStations;
     
     // Get observation stations
     const stationsResponse = await axios.get(observationStationsUrl, {
       headers: {
-        'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+        'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
         'Accept': 'application/json'
       },
-      timeout: 10000
+      timeout: 8000
     });
 
     if (stationsResponse.data.features && stationsResponse.data.features.length > 0) {
@@ -169,10 +173,10 @@ const fetchRainfallData = async () => {
       
       const obsResponse = await axios.get(observationsUrl, {
         headers: {
-          'User-Agent': 'NorforkDamScraper/1.0 (contact@example.com)',
+          'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
           'Accept': 'application/json'
         },
-        timeout: 10000
+        timeout: 8000
       });
 
       const observation = obsResponse.data.properties;
@@ -199,20 +203,51 @@ const fetchRainfallData = async () => {
         rainfall = rainfallInches;
         console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last 6 hours`);
       } else {
-        console.log('No recent precipitation data available');
+        console.log('No recent precipitation data available from Weather.gov');
         rainfall = '0';
       }
 
       return rainfall;
     }
 
-    console.log('No weather stations found, returning 0');
-    return '0';
+    console.log('No weather stations found, trying fallback...');
+    throw new Error('No stations available');
 
-  } catch (error) {
-    console.error('Error fetching rainfall data:', error.message);
-    // Return 0 if weather data unavailable
-    return '0';
+  } catch (weatherGovError) {
+    console.log(`Weather.gov failed (${weatherGovError.message}), trying fallback...`);
+    
+    // Fallback 1: Try USGS water data (sometimes includes precipitation)
+    try {
+      console.log('Trying USGS water data as fallback...');
+      
+      // USGS site near Norfork Dam
+      const usgsUrl = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=07055875&parameterCd=00045&period=P1D';
+      
+      const usgsResponse = await axios.get(usgsUrl, {
+        timeout: 5000
+      });
+      
+      if (usgsResponse.data && usgsResponse.data.value && usgsResponse.data.value.timeSeries) {
+        const timeSeries = usgsResponse.data.value.timeSeries[0];
+        if (timeSeries && timeSeries.values && timeSeries.values[0] && timeSeries.values[0].value) {
+          const latestValue = timeSeries.values[0].value[0];
+          if (latestValue && latestValue.value) {
+            const rainfall = parseFloat(latestValue.value).toFixed(2);
+            console.log(`Found rainfall from USGS: ${rainfall} inches`);
+            return rainfall;
+          }
+        }
+      }
+      
+      throw new Error('No USGS data available');
+      
+    } catch (usgsError) {
+      console.log(`USGS fallback failed (${usgsError.message})`);
+      
+      // Fallback 2: Check for any existing weather pattern or default to 0
+      console.log('All weather services failed, defaulting to 0');
+      return '0';
+    }
   }
 };
 
