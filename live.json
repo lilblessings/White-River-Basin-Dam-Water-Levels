@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "June 10, 2025",
+    "lastUpdate": "10JUN2025 1100",
     "dams": [
         {
             "id": "1",
@@ -16,17 +16,17 @@
             "longitude": -92.24,
             "data": [
                 {
-                    "date": "June 10, 2025",
+                    "date": "10JUN2025 1100",
                     "waterLevel": "576.80",
                     "liveStorage": "1,983,000",
                     "storagePercentage": "113.05",
                     "inflow": "N/A",
-                    "powerHouseDischarge": "N/A",
+                    "powerHouseDischarge": "2447",
                     "spillwayRelease": "0",
                     "totalOutflow": "2447",
                     "rainfall": "N/A",
-                    "tailwaterElevation": "N/A",
-                    "powerGeneration": "N/A",
+                    "tailwaterElevation": "375.96",
+                    "powerGeneration": "37",
                     "changeIn24Hours": "N/A",
                     "dataSource": "Army Corps of Engineers"
                 }
