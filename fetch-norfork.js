@@ -31,100 +31,77 @@ const damSpecs = {
 };
 
 // More accurate storage calculation based on Corps data and research
+// 100% = Flood Pool (580 ft), not Conservation Pool (552 ft)
 const calculateStoragePercentage = (waterLevel, specs) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL); // 552.00 ft
-  const floodPool = parseFloat(specs.floodPool); // 580.00 ft
-  const mwl = parseFloat(specs.MWL); // 590.00 ft
+  const frl = parseFloat(specs.FRL); // 552.00 ft (conservation pool)
+  const floodPool = parseFloat(specs.floodPool); // 580.00 ft (100% full)
+  const mwl = parseFloat(specs.MWL); // 590.00 ft (maximum)
   const deadLevel = parseFloat(specs.deadStorageLevel); // 380.00 ft
   
-  // Based on research: 552 ft = 1,983,000 acre-feet (100% conservation)
-  // Norfork Lake covers 22,000 acres at normal pool
+  // 100% = 580 ft (flood pool), not 552 ft (conservation pool)
   
   if (level <= deadLevel) {
     return '0.00'; // Dead storage
-  } else if (level <= frl) {
-    // Below conservation pool - use exponential storage curve approximation
-    // Storage increases exponentially with depth in reservoirs
-    const depthRatio = (level - deadLevel) / (frl - deadLevel);
-    const storageRatio = Math.pow(depthRatio, 2.5); // Exponential curve approximation
+  } else if (level <= floodPool) {
+    // Below flood pool (0% to 100%)
+    // Use exponential storage curve approximation
+    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
+    const storageRatio = Math.pow(depthRatio, 2.2); // Exponential curve for reservoir
     const percentage = storageRatio * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
-  } else if (level <= floodPool) {
-    // Between conservation pool (552 ft) and flood pool (580 ft)
-    // This is flood storage above normal conservation capacity
-    const conservationStorage = 100; // 100% at 552 ft
-    const floodDepth = level - frl; // Depth above conservation pool
-    const maxFloodDepth = floodPool - frl; // 28 ft of flood storage
-    
-    // Estimate additional storage in flood pool
-    // Based on research: flood pool provides significant additional storage
-    const floodStorageRatio = floodDepth / maxFloodDepth;
-    const additionalFloodStorage = floodStorageRatio * 30; // ~30% additional storage in flood pool
-    
-    const totalPercentage = conservationStorage + additionalFloodStorage;
-    return Math.min(140, totalPercentage).toFixed(2);
   } else {
-    // Above flood pool (580 ft) - emergency/surcharge storage
-    const baseStorage = 130; // ~130% at flood pool
+    // Above flood pool (100%+) - emergency/surcharge storage
+    const baseStorage = 100; // 100% at flood pool (580 ft)
     const surchargeDepth = level - floodPool;
     const maxSurchargeDepth = mwl - floodPool; // 10 ft above flood pool
     
     if (maxSurchargeDepth > 0) {
       const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
-      const additionalSurcharge = surchargeRatio * 20; // Additional emergency storage
-      return Math.min(150, baseStorage + additionalSurcharge).toFixed(2);
+      const additionalSurcharge = surchargeRatio * 15; // Up to 15% additional in emergency storage
+      return Math.min(115, baseStorage + additionalSurcharge).toFixed(2);
     }
     
-    return '130.00';
+    return '100.00';
   }
 };
 
-// More accurate live storage calculation based on research
+// Live storage calculation with 580 ft as 100% reference
 const calculateLiveStorage = (waterLevel, specs) => {
   if (!waterLevel || !specs) return 'N/A';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL); // 552.00 ft
-  const floodPool = parseFloat(specs.floodPool); // 580.00 ft
+  const frl = parseFloat(specs.FRL); // 552.00 ft (conservation pool)
+  const floodPool = parseFloat(specs.floodPool); // 580.00 ft (flood pool)
   const deadLevel = parseFloat(specs.deadStorageLevel); // 380.00 ft
+  
+  // Estimate storage at flood pool (580 ft) based on conservation pool data
   const conservationStorage = 1983000; // acre-feet at 552 ft
+  const floodPoolStorage = 2580000; // Estimated acre-feet at 580 ft (flood pool)
   
   if (level <= deadLevel) {
     return '0';
-  } else if (level <= frl) {
-    // Below conservation pool
-    const depthRatio = (level - deadLevel) / (frl - deadLevel);
-    const storageRatio = Math.pow(depthRatio, 2.5); // Exponential approximation
-    const currentStorage = Math.round(conservationStorage * storageRatio);
-    return currentStorage.toLocaleString();
   } else if (level <= floodPool) {
-    // In flood storage above conservation pool
-    const baseStorage = conservationStorage; // 1,983,000 at 552 ft
-    const floodDepth = level - frl;
-    const maxFloodDepth = floodPool - frl; // 28 ft
-    
-    // Estimate additional flood storage (reservoir gets wider as it gets higher)
-    const floodStorageRatio = floodDepth / maxFloodDepth;
-    const additionalStorage = Math.round(conservationStorage * 0.3 * floodStorageRatio);
-    
-    const totalStorage = baseStorage + additionalStorage;
-    return totalStorage.toLocaleString();
+    // Below flood pool - exponential curve
+    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
+    const storageRatio = Math.pow(depthRatio, 2.2);
+    const currentStorage = Math.round(floodPoolStorage * storageRatio);
+    return currentStorage.toLocaleString();
   } else {
     // Above flood pool - emergency storage
-    const floodStorage = Math.round(conservationStorage * 1.3); // ~130% at flood pool
+    const baseStorage = floodPoolStorage; // Storage at 580 ft
     const surchargeDepth = level - floodPool;
-    const maxSurchargeDepth = 10; // Approximate emergency storage depth
+    const maxSurchargeDepth = 10; // Emergency storage depth
     
     if (surchargeDepth > 0 && maxSurchargeDepth > 0) {
       const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
-      const additionalSurcharge = Math.round(conservationStorage * 0.2 * surchargeRatio);
-      return (floodStorage + additionalSurcharge).toLocaleString();
+      const additionalSurcharge = Math.round(floodPoolStorage * 0.15 * surchargeRatio);
+      return (baseStorage + additionalSurcharge).toLocaleString();
     }
     
-    return floodStorage.toLocaleString();
+    return floodPoolStorage.toLocaleString();
   }
 };
 
