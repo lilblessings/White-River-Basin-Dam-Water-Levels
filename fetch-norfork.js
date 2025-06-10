@@ -468,7 +468,7 @@ async function fetchDamDetails() {
       const files = await fs.readdir(folderName);
       for (const file of files) {
         if (file.endsWith('.json')) {
-          const damName = file.replace('historic_data_', '').replace('.json', '').replace(/_/g, ' ');
+          const damName = file.replace('.json', '');
           const data = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
           existingData[damName] = data;
         }
@@ -515,7 +515,7 @@ async function fetchDamDetails() {
     if (dataChanged) {
       // Save individual dam files
       for (const [damName, damData] of Object.entries(existingData)) {
-        const filename = `${folderName}/historic_data_${damName.replace(/\s+/g, '_')}.json`;
+        const filename = `${folderName}/${damName}.json`;
         await fs.writeFile(filename, JSON.stringify(damData, null, 4));
         console.log(`Details for dam ${damName} saved successfully in ${filename}.`);
       }
