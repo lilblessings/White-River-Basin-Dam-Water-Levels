@@ -15,21 +15,7 @@
             "latitude": 36.2483333,
             "longitude": -92.24,
             "data": [
-                {
-                    "date": "10JUN2025 1300",
-                    "waterLevel": "576.79",
-                    "liveStorage": "2,489,777",
-                    "storagePercentage": "96.50",
-                    "inflow": "N/A",
-                    "powerHouseDischarge": "37",
-                    "spillwayRelease": "0",
-                    "totalOutflow": "2451",
-                    "rainfall": "N/A",
-                    "tailwaterElevation": "375.98",
-                    "powerGeneration": "37",
-                    "changeIn24Hours": "N/A",
-                    "dataSource": "Army Corps of Engineers"
-                }
+                
             ]
         }
     ]
