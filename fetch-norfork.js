@@ -100,14 +100,9 @@ const fetchCorpsData = async () => {
 
     console.log('Successfully fetched Corps page, parsing data...');
     
-    // Debug: Log the page structure
-    console.log('Page title:', $('title').text());
-    console.log('Number of tables found:', $('table').length);
-    console.log('Number of rows found:', $('tr').length);
-    
-    // Debug: Log some of the actual content
-    console.log('First 500 characters of body text:');
-    console.log($('body').text().substring(0, 500));
+    // Get the full text content since it's pre-formatted text, not tables
+    const pageText = $('body').text();
+    console.log('Full page text length:', pageText.length);
 
     // Initialize data structure
     let corpsData = {
@@ -122,77 +117,103 @@ const fetchCorpsData = async () => {
       lastUpdate: null
     };
 
-    // Parse the tabular data from the Corps page
-    let rowCount = 0;
-    $('table').each((tableIndex, table) => {
-      console.log(`\n--- Table ${tableIndex + 1} ---`);
-      $(table).find('tr').each((rowIndex, row) => {
-        const cells = $(row).find('td, th');
-        rowCount++;
-        
-        if (cells.length >= 1) {
-          const cellTexts = [];
-          cells.each((i, cell) => {
-            cellTexts.push($(cell).text().trim());
-          });
-          console.log(`Row ${rowCount}: [${cellTexts.join(' | ')}]`);
-          
-          if (cells.length >= 2) {
-            const label = $(cells[0]).text().trim().toLowerCase();
-            const value = $(cells[1]).text().trim();
+    // Parse the pre-formatted text data
+    const lines = pageText.split('\n');
+    console.log(`Processing ${lines.length} lines of text...`);
 
-            // Match common Corps data labels
-            if (label.includes('pool') && (label.includes('elevation') || label.includes('level'))) {
-              corpsData.poolElevation = extractNumericValue(value);
-              console.log(`*** Found pool elevation: ${corpsData.poolElevation}`);
-            } else if (label.includes('tailwater') && label.includes('elevation')) {
-              corpsData.tailwaterElevation = extractNumericValue(value);
-            } else if (label.includes('spillway') && label.includes('release')) {
-              corpsData.spillwayRelease = extractNumericValue(value);
-            } else if (label.includes('powerhouse') && label.includes('discharge')) {
-              corpsData.powerHouseDischarge = extractNumericValue(value);
-            } else if (label.includes('total') && (label.includes('outflow') || label.includes('discharge'))) {
-              corpsData.totalOutflow = extractNumericValue(value);
-            } else if (label.includes('power') && label.includes('generation')) {
-              corpsData.powerGeneration = extractNumericValue(value);
-            } else if (label.includes('inflow')) {
-              corpsData.inflow = extractNumericValue(value);
-            } else if (label.includes('change') && label.includes('24')) {
-              corpsData.changeIn24Hours = extractNumericValue(value);
-            } else if (label.includes('time') || label.includes('date') || label.includes('update')) {
-              corpsData.lastUpdate = value;
-            }
-          }
-        }
-      });
-    });
+    // Find the data table section and get the most recent entry
+    let inDataSection = false;
+    let mostRecentDataLine = null;
     
-    console.log(`Total rows processed: ${rowCount}`);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Look for the table header to identify data section
+      if (line.includes('Date') && line.includes('Elevation') && line.includes('Tailwater')) {
+        console.log('Found data table header at line', i);
+        inDataSection = true;
+        continue;
+      }
+      
+      // Skip separator lines
+      if (line.includes('_____') || line.length < 10) {
+        continue;
+      }
+      
+      // If we're in the data section, look for data lines
+      if (inDataSection && line.match(/\d{2}JUN2025/)) {
+        console.log('Found data line:', line);
+        mostRecentDataLine = line;
+        // Keep going to find the most recent (last) entry
+      }
+    }
+
+    if (mostRecentDataLine) {
+      console.log('Processing most recent data line:', mostRecentDataLine);
+      
+      // Parse the fixed-width format
+      // Format: Date Time Elevation Tailwater Generation Release Siphon Release Release
+      const parts = mostRecentDataLine.trim().split(/\s+/);
+      console.log('Data parts:', parts);
+      
+      if (parts.length >= 8) {
+        const date = parts[0]; // e.g., "10JUN2025"
+        const time = parts[1]; // e.g., "1000"
+        const elevation = parts[2]; // e.g., "576.79"
+        const tailwater = parts[3]; // e.g., "375.96"
+        const generation = parts[4]; // e.g., "37"
+        const turbineRelease = parts[5]; // e.g., "2449"
+        const siphon = parts[6]; // e.g., "0"
+        const spillwayRelease = parts[7]; // e.g., "0"
+        const totalRelease = parts[8]; // e.g., "2449"
+        
+        corpsData.poolElevation = elevation;
+        corpsData.tailwaterElevation = tailwater;
+        corpsData.powerGeneration = generation;
+        corpsData.powerHouseDischarge = turbineRelease;
+        corpsData.spillwayRelease = spillwayRelease;
+        corpsData.totalOutflow = totalRelease;
+        corpsData.lastUpdate = `${date} ${time}`;
+        
+        console.log('Parsed data successfully:');
+        console.log('- Pool Elevation:', elevation);
+        console.log('- Tailwater:', tailwater);
+        console.log('- Power Generation:', generation, 'MWh');
+        console.log('- Turbine Release:', turbineRelease, 'CFS');
+        console.log('- Spillway Release:', spillwayRelease, 'CFS');
+        console.log('- Total Release:', totalRelease, 'CFS');
+      }
+    }
+
+    // Also extract the current power pool from the header
+    const powerPoolMatch = pageText.match(/Current Power Pool:\s*(\d+\.\d+)/);
+    if (powerPoolMatch) {
+      console.log('Found current power pool:', powerPoolMatch[1]);
+      // Note: This might be different from the detailed elevation data
+    }
+
+    // Extract flood pool level
+    const floodPoolMatch = pageText.match(/Top Flood Pool:\s*(\d+\.\d+)/);
+    if (floodPoolMatch) {
+      console.log('Found flood pool level:', floodPoolMatch[1]);
+    }
 
     // Alternative parsing for different formats
     if (!corpsData.poolElevation) {
-      console.log('Trying alternative parsing methods...');
+      console.log('No data found in main parsing, trying alternative patterns...');
       
-      // Look for elevation in any text content
-      const pageText = $('body').text();
-      
-      // Try different elevation patterns
-      const elevationPatterns = [
-        /pool.*?elevation.*?(\d+\.\d+)/i,
-        /elevation.*?pool.*?(\d+\.\d+)/i,
-        /lake.*?level.*?(\d+\.\d+)/i,
-        /(\d{3}\.\d{2})\s*(?:ft|feet)/i
-      ];
-      
-      for (const pattern of elevationPatterns) {
-        const match = pageText.match(pattern);
-        if (match) {
-          const elevation = parseFloat(match[1]);
-          if (elevation > 500 && elevation < 600) {
-            corpsData.poolElevation = match[1];
-            console.log(`Found elevation via pattern matching: ${corpsData.poolElevation}`);
-            break;
-          }
+      // Look for the most recent elevation in the text
+      const elevationMatches = pageText.match(/(\d{3}\.\d{2})/g);
+      if (elevationMatches) {
+        // Filter for realistic pool elevations (570-590 range for current conditions)
+        const validElevations = elevationMatches
+          .map(e => parseFloat(e))
+          .filter(e => e >= 570 && e <= 590);
+        
+        if (validElevations.length > 0) {
+          // Use the most recent valid elevation
+          corpsData.poolElevation = validElevations[validElevations.length - 1].toString();
+          console.log(`Found elevation via pattern matching: ${corpsData.poolElevation}`);
         }
       }
     }
