@@ -486,6 +486,33 @@
                     "rainfall": "1.00"
                 }
             ]
+        },
+        {
+            "id": "100",
+            "name": "Norfork",
+            "officialName": "NORFORK",
+            "MWL": "580",               // max water level (you can update with accurate data)
+            "FRL": "578",               // full reservoir level
+            "liveStorageAtFRL": "977000",  // acre-feet or MCM if known
+            "ruleLevel": "575",
+            "blueLevel": "570",
+            "orangeLevel": "573",
+            "redLevel": "577",
+            "latitude": 36.2514,
+            "longitude": -92.2844,
+            "data": [
+                {
+                    "date": "06.10.2025",
+                    "waterLevel": "565.32",
+                    "liveStorage": "850000",
+                    "storagePercentage": "87.0%",
+                    "inflow": "8000",
+                    "powerHouseDischarge": "4000",
+                    "spillwayRelease": "2000",
+                    "totalOutflow": "6000",
+                    "rainfall": "0.00"
+                }
+            ]
         }
     ]
 }
