@@ -230,7 +230,7 @@ const fetchCorpsData = async () => {
         corpsData.poolElevation = elevation;
         corpsData.tailwaterElevation = tailwater;
         corpsData.powerGeneration = generation;
-        corpsData.powerHouseDischarge = turbineRelease;
+        corpsData.powerHouseDischarge = generation;
         corpsData.spillwayRelease = spillwayRelease;
         corpsData.totalOutflow = totalRelease;
         corpsData.lastUpdate = `${date} ${time}`;
@@ -358,7 +358,7 @@ const fetchCorpsData = async () => {
         corpsData.poolElevation = mostRecentLine.elevation;
         corpsData.tailwaterElevation = mostRecentLine.tailwater || null;
         corpsData.powerGeneration = mostRecentLine.generation || null;
-        corpsData.powerHouseDischarge = mostRecentLine.turbineRelease || null;
+        corpsData.powerHouseDischarge = mostRecentLine.generation || null;
         corpsData.spillwayRelease = mostRecentLine.spillwayRelease || null;
         corpsData.totalOutflow = mostRecentLine.totalRelease || null;
         corpsData.lastUpdate = mostRecentLine.date && mostRecentLine.time ? 
