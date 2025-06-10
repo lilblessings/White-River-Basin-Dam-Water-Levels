@@ -18,21 +18,21 @@ const Names = {
 // All values in imperial units for US dams
 const damSpecs = {
   'norfork': {
-    MWL: '590.00', // Maximum Water Level (top of dam) - feet
+    MWL: '580.00', // Maximum Water Level (top of dam) - feet
     MWLUnit: 'ft',
-    FRL: '580.00', // Full Recreation Level (normal conservation pool) - feet
+    FRL: '552.00', // Full Recreation Level (normal conservation pool) - feet
     FRLUnit: 'ft',
     floodPool: '580.00', // Top of flood pool - feet
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,590,000', // acre-feet at conservation pool (580 ft)
+    liveStorageAtFRL: '2,580,000', // acre-feet at conservation pool (552 ft)
     liveStorageAtFRLUnit: 'acre-ft',
     ruleLevel: '552.00', // Rule curve level - feet
     ruleLevelUnit: 'ft',
     blueLevel: '552.00', // Recreation level - feet
     blueLevelUnit: 'ft',
-    orangeLevel: '570.00', // Action level - feet
+    orangeLevel: '565.00', // Action level - feet
     orangeLevelUnit: 'ft',
-    redLevel: '580.00', // Flood pool - feet
+    redLevel: '570.00', // Flood pool - feet
     redLevelUnit: 'ft',
     deadStorageLevel: '380.00', // Approximate dead storage level - feet
     deadStorageLevelUnit: 'ft',
