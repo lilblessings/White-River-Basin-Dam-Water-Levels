@@ -491,9 +491,9 @@
             "id": "19",
             "name": "Norfork",
             "officialName": "NORFORK",
-            "MWL": "580",               // max water level (you can update with accurate data)
-            "FRL": "578",               // full reservoir level
-            "liveStorageAtFRL": "977000",  // acre-feet or MCM if known
+            "MWL": "580",               
+            "FRL": "578",               
+            "liveStorageAtFRL": "977000",  
             "ruleLevel": "575",
             "blueLevel": "570",
             "orangeLevel": "573",
