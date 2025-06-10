@@ -447,46 +447,66 @@ const fetchNorforkDamData = async () => {
 // Main function to fetch dam details and update data files
 async function fetchDamDetails() {
   try {
+    console.log('🚀 Starting Norfork Dam scraper...');
+    
     // Create folder if it doesn't exist
     try {
       await fs.access(folderName);
+      console.log('✅ historic_data folder exists');
     } catch (error) {
+      console.log('📁 Creating historic_data folder...');
       await fs.mkdir(folderName);
     }
 
     console.log('Processing Norfork Dam data...');
     const { dams } = await fetchNorforkDamData();
 
+    console.log(`📊 Retrieved ${dams.length} dam(s) from data sources`);
+
     if (dams.length === 0) {
-      console.log('No dam data found.');
+      console.log('❌ No dam data found - cannot create files.');
       return;
     }
+
+    // Debug: Show what data we have
+    const dam = dams[0];
+    console.log('🔍 Dam data preview:');
+    console.log('- Name:', dam.name);
+    console.log('- Water Level:', dam.data[0].waterLevel);
+    console.log('- Date:', dam.data[0].date);
+    console.log('- Data Source:', dam.data[0].dataSource);
 
     // Load existing data
     const existingData = {};
     try {
       const files = await fs.readdir(folderName);
+      console.log('📂 Found existing files:', files);
+      
       for (const file of files) {
         if (file.endsWith('.json')) {
           const damName = file.replace('.json', '');
           const data = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
           existingData[damName] = data;
+          console.log(`📄 Loaded existing data for ${damName}: ${data.data.length} records`);
         }
       }
     } catch (error) {
-      console.log('No existing data files found, creating new ones...');
+      console.log('📝 No existing data files found, creating new ones...');
     }
 
     let dataChanged = false;
 
     for (const newDam of dams) {
+      console.log(`🔄 Processing dam: ${newDam.name}`);
       const existingDam = existingData[newDam.name];
 
       if (existingDam) {
+        console.log(`📊 Found existing data for ${newDam.name}`);
         // Check if this date already exists
         const dateExists = existingDam.data.some(d => d.date === newDam.data[0].date);
 
         if (!dateExists) {
+          console.log(`➕ Adding new data point for ${newDam.data[0].date}`);
           // Add new data point to the beginning
           existingDam.data.unshift(newDam.data[0]);
           // Update dam specifications
@@ -504,35 +524,59 @@ async function fetchDamDetails() {
             longitude: newDam.longitude
           });
           dataChanged = true;
+        } else {
+          console.log(`⏭️  Data for ${newDam.data[0].date} already exists, skipping`);
         }
       } else {
+        console.log(`🆕 Creating new dam file for ${newDam.name}`);
         // New dam, add entire data structure
         existingData[newDam.name] = newDam;
         dataChanged = true;
       }
     }
 
+    console.log(`📈 Data changed: ${dataChanged}`);
+
     if (dataChanged) {
+      console.log('💾 Saving files...');
+      
       // Save individual dam files
       for (const [damName, damData] of Object.entries(existingData)) {
         const filename = `${folderName}/${damName}.json`;
-        await fs.writeFile(filename, JSON.stringify(damData, null, 4));
-        console.log(`Details for dam ${damName} saved successfully in ${filename}.`);
+        
+        try {
+          await fs.writeFile(filename, JSON.stringify(damData, null, 4));
+          console.log(`✅ Details for dam ${damName} saved successfully in ${filename}.`);
+          
+          // Verify the file was created
+          const stats = await fs.stat(filename);
+          console.log(`📁 File size: ${stats.size} bytes`);
+        } catch (writeError) {
+          console.error(`❌ Error writing ${filename}:`, writeError);
+        }
       }
 
       // Save live JSON file with most recent data
-      const liveData = {
-        lastUpdate: dams[0].data[0].date,
-        dams
-      };
-      await fs.writeFile('live.json', JSON.stringify(liveData, null, 4));
-      console.log('Live dam data saved successfully in live.json.');
+      try {
+        const liveData = {
+          lastUpdate: dams[0].data[0].date,
+          dams
+        };
+        await fs.writeFile('live.json', JSON.stringify(liveData, null, 4));
+        console.log('✅ Live dam data saved successfully in live.json.');
+        
+        // Verify live.json was created
+        const liveStats = await fs.stat('live.json');
+        console.log(`📁 Live file size: ${liveStats.size} bytes`);
+      } catch (liveError) {
+        console.error('❌ Error writing live.json:', liveError);
+      }
     } else {
-      console.log('No new data to save.');
+      console.log('⏸️  No new data to save.');
     }
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('💥 Error in fetchDamDetails:', error);
   }
 }
 
