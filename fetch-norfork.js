@@ -20,11 +20,11 @@ const damSpecs = {
   'norfork': {
     MWL: '590.00', // Maximum Water Level (top of dam) - feet
     MWLUnit: 'ft',
-    FRL: '552.00', // Full Recreation Level (normal conservation pool) - feet
+    FRL: '580.00', // Full Recreation Level (normal conservation pool) - feet
     FRLUnit: 'ft',
     floodPool: '580.00', // Top of flood pool - feet
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,983,000', // acre-feet at conservation pool (552 ft)
+    liveStorageAtFRL: '2,590,000', // acre-feet at conservation pool (580 ft)
     liveStorageAtFRLUnit: 'acre-ft',
     ruleLevel: '552.00', // Rule curve level - feet
     ruleLevelUnit: 'ft',
