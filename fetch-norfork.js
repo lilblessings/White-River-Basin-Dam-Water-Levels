@@ -141,20 +141,27 @@ const fetchCorpsData = async () => {
       }
       
       // If we're in the data section, look for data lines
-      if (inDataSection && line.match(/\d{2}JUN2025/)) {
-        console.log('Found data line:', line);
-        mostRecentDataLine = line;
-        // Keep going to find the most recent (last) entry
+      if (inDataSection) {
+        // Look for lines with date pattern (DDMMMYYYY format)
+        if (line.match(/\d{2}[A-Z]{3}2025/)) {
+          console.log('Found data line:', line);
+          mostRecentDataLine = line;
+          // Keep going to find the most recent (last) entry
+        }
       }
     }
 
     if (mostRecentDataLine) {
       console.log('Processing most recent data line:', mostRecentDataLine);
       
-      // Parse the fixed-width format
-      // Format: Date Time Elevation Tailwater Generation Release Siphon Release Release
-      const parts = mostRecentDataLine.trim().split(/\s+/);
+      // Parse the fixed-width format more carefully
+      // The data appears to be in columns, let's extract by position
+      const line = mostRecentDataLine.trim();
+      
+      // Split by multiple spaces to get the columns
+      const parts = line.split(/\s+/);
       console.log('Data parts:', parts);
+      console.log('Number of parts:', parts.length);
       
       if (parts.length >= 8) {
         const date = parts[0]; // e.g., "10JUN2025"
@@ -165,7 +172,9 @@ const fetchCorpsData = async () => {
         const turbineRelease = parts[5]; // e.g., "2449"
         const siphon = parts[6]; // e.g., "0"
         const spillwayRelease = parts[7]; // e.g., "0"
-        const totalRelease = parts[8]; // e.g., "2449"
+        
+        // Total release is usually the last column
+        const totalRelease = parts.length > 8 ? parts[8] : turbineRelease;
         
         corpsData.poolElevation = elevation;
         corpsData.tailwaterElevation = tailwater;
@@ -175,13 +184,72 @@ const fetchCorpsData = async () => {
         corpsData.totalOutflow = totalRelease;
         corpsData.lastUpdate = `${date} ${time}`;
         
-        console.log('Parsed data successfully:');
-        console.log('- Pool Elevation:', elevation);
-        console.log('- Tailwater:', tailwater);
+        console.log('✅ Parsed data successfully:');
+        console.log('- Date/Time:', `${date} ${time}`);
+        console.log('- Pool Elevation:', elevation, 'ft');
+        console.log('- Tailwater:', tailwater, 'ft');
         console.log('- Power Generation:', generation, 'MWh');
         console.log('- Turbine Release:', turbineRelease, 'CFS');
         console.log('- Spillway Release:', spillwayRelease, 'CFS');
         console.log('- Total Release:', totalRelease, 'CFS');
+      } else {
+        console.log('⚠️ Data line does not have expected number of columns');
+        
+        // Try alternative parsing for different format
+        // Sometimes the data might be formatted differently
+        const elevationMatch = line.match(/(\d{3}\.\d{2})/);
+        if (elevationMatch) {
+          corpsData.poolElevation = elevationMatch[1];
+          console.log('- Found elevation from line:', elevationMatch[1]);
+        }
+        
+        // Look for discharge values (typically 3-4 digit numbers)
+        const dischargeMatches = line.match(/\b(\d{3,5})\b/g);
+        if (dischargeMatches && dischargeMatches.length > 0) {
+          // The largest number is usually total discharge
+          const discharges = dischargeMatches.map(d => parseInt(d));
+          corpsData.totalOutflow = Math.max(...discharges).toString();
+          console.log('- Found discharge from line:', corpsData.totalOutflow, 'CFS');
+        }
+      }
+    } else {
+      console.log('⚠️ No data lines found in expected format');
+      
+      // Try to find data lines with a different approach
+      console.log('Searching for any lines with elevation patterns...');
+      for (const line of lines) {
+        if (line.match(/\d{3}\.\d{2}/) && line.length > 50) {
+          console.log('Potential data line found:', line);
+          
+          const parts = line.trim().split(/\s+/);
+          if (parts.length >= 3) {
+            // Try to extract elevation and other data
+            for (let i = 0; i < parts.length; i++) {
+              const part = parts[i];
+              if (part.match(/\d{3}\.\d{2}/)) {
+                const elevation = parseFloat(part);
+                if (elevation >= 570 && elevation <= 590) {
+                  corpsData.poolElevation = part;
+                  console.log('- Found elevation:', part);
+                  
+                  // Look for discharge values in subsequent parts
+                  for (let j = i + 1; j < parts.length; j++) {
+                    const dischargePart = parts[j];
+                    if (dischargePart.match(/^\d{3,5}$/)) {
+                      const discharge = parseInt(dischargePart);
+                      if (discharge > 1000 && discharge < 50000) {
+                        corpsData.totalOutflow = dischargePart;
+                        console.log('- Found discharge:', dischargePart, 'CFS');
+                        break;
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
       }
     }
 
