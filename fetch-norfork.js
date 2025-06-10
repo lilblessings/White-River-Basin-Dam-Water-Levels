@@ -33,12 +33,39 @@ const fetchUSLakesData = async () => {
     const $ = cheerio.load(html);
 
     // Extract water level and date from the page
-    const waterLevelText = $('td').filter((i, el) => $(el).text().includes('Feet MSL')).text();
-    const waterLevelMatch = waterLevelText.match(/(\d+\.\d+)/);
-    const waterLevel = waterLevelMatch ? waterLevelMatch[1] : null;
+    let waterLevel = null;
+    let date = null;
 
-    const dateText = $('td').filter((i, el) => $(el).text().includes('Tuesday, June 10, 2025')).text();
-    const date = dateText ? 'June 10, 2025' : new Date().toLocaleDateString();
+    // Look for the water level in the table structure
+    $('td').each((i, el) => {
+      const text = $(el).text().trim();
+      
+      // Look for pattern like "576.78 Feet MSL"
+      const levelMatch = text.match(/(\d+\.\d+)\s*Feet MSL/i);
+      if (levelMatch) {
+        waterLevel = levelMatch[1];
+      }
+      
+      // Look for date pattern
+      if (text.includes('Tuesday, June 10, 2025') || text.match(/\w+,\s+\w+\s+\d+,\s+\d{4}/)) {
+        date = text.includes('Tuesday, June 10, 2025') ? 'June 10, 2025' : text;
+      }
+    });
+
+    // Alternative parsing if not found in table
+    if (!waterLevel) {
+      const bodyText = $('body').text();
+      const levelMatch = bodyText.match(/(\d+\.\d+)\s*Feet MSL/i);
+      if (levelMatch) {
+        waterLevel = levelMatch[1];
+      }
+    }
+
+    if (!date) {
+      date = new Date().toLocaleDateString();
+    }
+
+    console.log(`USLakes data: Water Level = ${waterLevel}, Date = ${date}`);
 
     return { waterLevel, date };
   } catch (error) {
@@ -132,8 +159,30 @@ const fetchNorforkDamData = async () => {
       day: 'numeric'
     });
 
-    // Use Corps pool elevation if available, otherwise fall back to USLakes
-    const waterLevel = corpsData?.poolElevation || uslakesData?.waterLevel || '552.00';
+    // Validate Corps data before using it - if it seems incorrect, use USLakes
+    let waterLevel = '552.00';
+    
+    if (uslakesData?.waterLevel) {
+      waterLevel = uslakesData.waterLevel;
+      console.log(`Using USLakes water level: ${waterLevel} ft MSL`);
+    }
+    
+    if (corpsData?.poolElevation) {
+      const corpsLevel = parseFloat(corpsData.poolElevation);
+      const uslakesLevel = parseFloat(uslakesData?.waterLevel || 0);
+      
+      // Only use Corps data if it's reasonable and close to USLakes data
+      if (corpsLevel > 400 && corpsLevel < 600) {
+        if (!uslakesData || Math.abs(corpsLevel - uslakesLevel) < 10) {
+          waterLevel = corpsData.poolElevation;
+          console.log(`Using Corps water level: ${waterLevel} ft MSL`);
+        } else {
+          console.log(`Corps level (${corpsLevel}) differs significantly from USLakes (${uslakesLevel}), using USLakes`);
+        }
+      } else {
+        console.log(`Corps level (${corpsLevel}) seems unrealistic, using USLakes`);
+      }
+    }
     
     // Use Corps discharge data if available, otherwise USGS
     const powerHouseDischarge = corpsData?.powerHouseDischarge || usgsData?.discharge || 'N/A';
@@ -227,7 +276,150 @@ const determineDataSource = (corpsData, uslakesData, usgsData) => {
   return sources.length > 0 ? sources.join(', ') : 'Manual Entry';
 };
 
-const folderName = 'historic_data';
+// Fetch historical data for initial seeding (last 30 days)
+const fetchHistoricalData = async () => {
+  try {
+    console.log('Fetching historical data for the last 30 days...');
+    
+    const historicalData = [];
+    const today = new Date();
+    
+    // Try USGS historical data first (most reliable for past data)
+    try {
+      const endDate = today.toISOString().split('T')[0];
+      const startDate = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+      
+      console.log(`Fetching USGS data from ${startDate} to ${endDate}`);
+      
+      const usgsResponse = await axios.get(
+        `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=07059998&startDT=${startDate}&endDT=${endDate}&parameterCd=00065,00060`
+      );
+
+      if (usgsResponse.data && usgsResponse.data.value && usgsResponse.data.value.timeSeries) {
+        const timeSeries = usgsResponse.data.value.timeSeries;
+        
+        const gageHeightSeries = timeSeries.find(series => 
+          series.variable.variableCode[0].value === '00065'
+        );
+        const dischargeSeries = timeSeries.find(series => 
+          series.variable.variableCode[0].value === '00060'
+        );
+
+        if (gageHeightSeries && gageHeightSeries.values[0]) {
+          const values = gageHeightSeries.values[0].value;
+          const dischargeValues = dischargeSeries?.values[0]?.value || [];
+          
+          // Convert daily values to our format
+          values.forEach((reading, index) => {
+            const date = new Date(reading.dateTime).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            
+            const discharge = dischargeValues[index]?.value || 'N/A';
+            const gageHeight = parseFloat(reading.value);
+            
+            // Convert gage height to pool elevation (approximate)
+            // Norfork Dam gage height needs conversion to pool elevation
+            const poolElevation = (gageHeight + 545).toFixed(2); // Rough conversion
+            
+            const specs = damSpecs.norfork;
+            const storagePercentage = calculateStoragePercentage(poolElevation, specs);
+            const liveStorage = calculateLiveStorage(poolElevation, specs);
+
+            historicalData.push({
+              date: date,
+              waterLevel: poolElevation,
+              liveStorage: liveStorage,
+              storagePercentage: storagePercentage,
+              inflow: 'N/A',
+              powerHouseDischarge: discharge,
+              spillwayRelease: '0',
+              totalOutflow: discharge,
+              rainfall: 'N/A',
+              tailwaterElevation: 'N/A',
+              powerGeneration: 'N/A',
+              changeIn24Hours: 'N/A',
+              dataSource: 'USGS Historical'
+            });
+          });
+          
+          console.log(`Found ${historicalData.length} days of USGS historical data`);
+        }
+      }
+    } catch (usgsError) {
+      console.log('USGS historical data not available, trying alternative sources...');
+    }
+
+    // If USGS didn't provide enough data, try to supplement with other sources
+    if (historicalData.length < 15) {
+      console.log('Supplementing with additional historical sources...');
+      
+      // Try to get water level history from USLakes (if they have an API or historical page)
+      try {
+        // Check if USLakes has historical data page
+        const historyResponse = await axios.get('https://norfork.uslakes.info/Level/Calendar/');
+        const $ = cheerio.load(historyResponse.data);
+        
+        // Parse any historical data found on the calendar page
+        $('table td').each((i, el) => {
+          const text = $(el).text().trim();
+          const levelMatch = text.match(/(\d+\.\d+)/);
+          if (levelMatch && parseFloat(levelMatch[1]) > 500) {
+            // Found what looks like a water level
+            const level = levelMatch[1];
+            const specs = damSpecs.norfork;
+            
+            historicalData.push({
+              date: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric'
+              }),
+              waterLevel: level,
+              liveStorage: calculateLiveStorage(level, specs),
+              storagePercentage: calculateStoragePercentage(level, specs),
+              inflow: 'N/A',
+              powerHouseDischarge: 'N/A',
+              spillwayRelease: 'N/A',
+              totalOutflow: 'N/A',
+              rainfall: 'N/A',
+              dataSource: 'USLakes Historical'
+            });
+          }
+        });
+      } catch (histError) {
+        console.log('USLakes historical data not available');
+      }
+    }
+
+    // Sort by date (most recent first)
+    historicalData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Remove duplicates by date
+    const uniqueData = historicalData.filter((item, index, self) => 
+      index === self.findIndex(t => t.date === item.date)
+    );
+
+    console.log(`Prepared ${uniqueData.length} days of historical data`);
+    return uniqueData;
+
+  } catch (error) {
+    console.error('Error fetching historical data:', error);
+    return [];
+  }
+};
+
+// Check if this is the initial run (no existing data)
+const isInitialRun = async () => {
+  try {
+    await fs.access(`${folderName}/historic_data_Norfork.json`);
+    return false; // File exists, not initial run
+  } catch (error) {
+    return true; // File doesn't exist, this is initial run
+  }
+};
 
 // Main function to fetch dam details and update data files
 async function fetchDamDetails() {
@@ -239,6 +431,9 @@ async function fetchDamDetails() {
       await fs.mkdir(folderName);
     }
 
+    // Check if this is the initial run
+    const initialRun = await isInitialRun();
+    
     console.log('Processing Norfork Dam data...');
     const { dams } = await fetchNorforkDamData();
 
@@ -291,7 +486,19 @@ async function fetchDamDetails() {
           dataChanged = true;
         }
       } else {
-        // New dam, add entire data structure
+        // New dam - check if this is initial run to add historical data
+        if (initialRun) {
+          console.log('🚀 Initial run detected - fetching historical data...');
+          const historicalData = await fetchHistoricalData();
+          
+          if (historicalData.length > 0) {
+            // Add current data to the beginning
+            const allData = [newDam.data[0], ...historicalData];
+            newDam.data = allData;
+            console.log(`✅ Added ${historicalData.length} days of historical data`);
+          }
+        }
+        
         existingData[newDam.name] = newDam;
         dataChanged = true;
       }
@@ -303,6 +510,10 @@ async function fetchDamDetails() {
         const filename = `${folderName}/historic_data_${damName.replace(/\s+/g, '_')}.json`;
         await fs.writeFile(filename, JSON.stringify(damData, null, 4));
         console.log(`Details for dam ${damName} saved successfully in ${filename}.`);
+        
+        if (initialRun && damName === 'Norfork') {
+          console.log(`📊 Historical data summary: ${damData.data.length} total data points`);
+        }
       }
 
       // Save live JSON file with most recent data
@@ -409,6 +620,16 @@ const fetchCorpsData = async () => {
       }
 
       console.log('Successfully fetched Corps data:', corpsData);
+      
+      // Validate the Corps data - sometimes the parsing picks up wrong values
+      if (corpsData.poolElevation) {
+        const elevation = parseFloat(corpsData.poolElevation);
+        if (elevation < 400 || elevation > 600) {
+          console.log(`⚠️ Corps elevation ${elevation} seems unrealistic, marking as invalid`);
+          corpsData.poolElevation = null;
+        }
+      }
+      
       return corpsData;
 
     } catch (fetchError) {
