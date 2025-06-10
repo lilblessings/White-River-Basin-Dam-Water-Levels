@@ -99,6 +99,15 @@ const fetchCorpsData = async () => {
     const $ = cheerio.load(html);
 
     console.log('Successfully fetched Corps page, parsing data...');
+    
+    // Debug: Log the page structure
+    console.log('Page title:', $('title').text());
+    console.log('Number of tables found:', $('table').length);
+    console.log('Number of rows found:', $('tr').length);
+    
+    // Debug: Log some of the actual content
+    console.log('First 500 characters of body text:');
+    console.log($('body').text().substring(0, 500));
 
     // Initialize data structure
     let corpsData = {
@@ -114,39 +123,51 @@ const fetchCorpsData = async () => {
     };
 
     // Parse the tabular data from the Corps page
+    let rowCount = 0;
     $('table').each((tableIndex, table) => {
+      console.log(`\n--- Table ${tableIndex + 1} ---`);
       $(table).find('tr').each((rowIndex, row) => {
         const cells = $(row).find('td, th');
-        if (cells.length >= 2) {
-          const label = $(cells[0]).text().trim().toLowerCase();
-          const value = $(cells[1]).text().trim();
+        rowCount++;
+        
+        if (cells.length >= 1) {
+          const cellTexts = [];
+          cells.each((i, cell) => {
+            cellTexts.push($(cell).text().trim());
+          });
+          console.log(`Row ${rowCount}: [${cellTexts.join(' | ')}]`);
+          
+          if (cells.length >= 2) {
+            const label = $(cells[0]).text().trim().toLowerCase();
+            const value = $(cells[1]).text().trim();
 
-          console.log(`Found row: "${label}" = "${value}"`);
-
-          // Match common Corps data labels
-          if (label.includes('pool') && (label.includes('elevation') || label.includes('level'))) {
-            corpsData.poolElevation = extractNumericValue(value);
-            console.log(`Pool elevation: ${corpsData.poolElevation}`);
-          } else if (label.includes('tailwater') && label.includes('elevation')) {
-            corpsData.tailwaterElevation = extractNumericValue(value);
-          } else if (label.includes('spillway') && label.includes('release')) {
-            corpsData.spillwayRelease = extractNumericValue(value);
-          } else if (label.includes('powerhouse') && label.includes('discharge')) {
-            corpsData.powerHouseDischarge = extractNumericValue(value);
-          } else if (label.includes('total') && (label.includes('outflow') || label.includes('discharge'))) {
-            corpsData.totalOutflow = extractNumericValue(value);
-          } else if (label.includes('power') && label.includes('generation')) {
-            corpsData.powerGeneration = extractNumericValue(value);
-          } else if (label.includes('inflow')) {
-            corpsData.inflow = extractNumericValue(value);
-          } else if (label.includes('change') && label.includes('24')) {
-            corpsData.changeIn24Hours = extractNumericValue(value);
-          } else if (label.includes('time') || label.includes('date') || label.includes('update')) {
-            corpsData.lastUpdate = value;
+            // Match common Corps data labels
+            if (label.includes('pool') && (label.includes('elevation') || label.includes('level'))) {
+              corpsData.poolElevation = extractNumericValue(value);
+              console.log(`*** Found pool elevation: ${corpsData.poolElevation}`);
+            } else if (label.includes('tailwater') && label.includes('elevation')) {
+              corpsData.tailwaterElevation = extractNumericValue(value);
+            } else if (label.includes('spillway') && label.includes('release')) {
+              corpsData.spillwayRelease = extractNumericValue(value);
+            } else if (label.includes('powerhouse') && label.includes('discharge')) {
+              corpsData.powerHouseDischarge = extractNumericValue(value);
+            } else if (label.includes('total') && (label.includes('outflow') || label.includes('discharge'))) {
+              corpsData.totalOutflow = extractNumericValue(value);
+            } else if (label.includes('power') && label.includes('generation')) {
+              corpsData.powerGeneration = extractNumericValue(value);
+            } else if (label.includes('inflow')) {
+              corpsData.inflow = extractNumericValue(value);
+            } else if (label.includes('change') && label.includes('24')) {
+              corpsData.changeIn24Hours = extractNumericValue(value);
+            } else if (label.includes('time') || label.includes('date') || label.includes('update')) {
+              corpsData.lastUpdate = value;
+            }
           }
         }
       });
     });
+    
+    console.log(`Total rows processed: ${rowCount}`);
 
     // Alternative parsing for different formats
     if (!corpsData.poolElevation) {
