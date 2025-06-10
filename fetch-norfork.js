@@ -2,6 +2,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 
+const folderName = 'historic_data';
+
 // Norfork Dam coordinates and specifications
 const damCoordinates = {
   'norfork': { latitude: 36.2483333, longitude: -92.24 }
