@@ -29,6 +29,18 @@
                     "powerGeneration": "N/A",
                     "changeIn24Hours": "N/A",
                     "dataSource": "Army Corps of Engineers, USLakes.info"
+                },
+                {
+                    "date": "June 10, 2025",
+                    "waterLevel": "578.7",
+                    "liveStorage": "1,983,000",
+                    "storagePercentage": "114.05",
+                    "inflow": "N/A",
+                    "powerHouseDischarge": "N/A",
+                    "spillwayRelease": "N/A",
+                    "totalOutflow": "N/A",
+                    "rainfall": "N/A",
+                    "dataSource": "USLakes Historical"
                 }
             ]
         }
