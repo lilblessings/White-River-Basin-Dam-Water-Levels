@@ -403,6 +403,7 @@ const fetchNorforkDamData = async () => {
       longitude: damCoordinates.norfork.longitude,
       data: [{
         date: `${day}.${month}.${year}`,
+        time: `${hour.padStart(2, '0')}:00`, // Add explicit time field for hourly tracking
         waterLevel: waterLevel.toFixed(2),
         liveStorage: liveStorage,
         storagePercentage: storagePercentage,
@@ -416,7 +417,7 @@ const fetchNorforkDamData = async () => {
         changeIn24Hours: '0', // Would need calculation
         lakeWaterTemp: lakeTemperature,
         dataSource: 'USACE CDA API (Enhanced)',
-        timestamp: `${year}-${month}-${day}T${hour}:00:00.000Z`
+        timestamp: `${year}-${month}-${day}T${hour.padStart(2, '0')}:00:00.000Z`
       }]
     };
 
@@ -501,13 +502,18 @@ async function fetchDamDetails() {
 
       if (existingDam) {
         console.log(`📊 Found existing data for ${newDam.name}`);
-        // Check if this date already exists
-        const dateExists = existingDam.data.some(d => d.date === newDam.data[0].date);
+        
+        // Check if this exact timestamp already exists (hourly precision)
+        const newTimestamp = newDam.data[0].timestamp;
+        const timestampExists = existingDam.data.some(d => d.timestamp === newTimestamp);
 
-        if (!dateExists) {
-          console.log(`➕ Adding new data point for ${newDam.data[0].date}`);
-          // Add new data point to the beginning
+        if (!timestampExists) {
+          console.log(`➕ Adding new hourly data point for ${newDam.data[0].date} ${newDam.data[0].time || 'N/A'}`);
+          console.log(`   📅 Timestamp: ${newTimestamp}`);
+          
+          // Add new data point to the beginning (most recent first)
           existingDam.data.unshift(newDam.data[0]);
+          
           // Update dam specifications
           Object.assign(existingDam, {
             id: newDam.id,
@@ -522,9 +528,27 @@ async function fetchDamDetails() {
             latitude: newDam.latitude,
             longitude: newDam.longitude
           });
+          
           dataChanged = true;
         } else {
-          console.log(`⏭️  Data for ${newDam.data[0].date} already exists, skipping`);
+          console.log(`⏭️  Hourly data for timestamp ${newTimestamp} already exists, skipping`);
+          
+          // Optional: Update the existing entry if the new data is more complete
+          const existingIndex = existingDam.data.findIndex(d => d.timestamp === newTimestamp);
+          if (existingIndex !== -1) {
+            const existingEntry = existingDam.data[existingIndex];
+            const newEntry = newDam.data[0];
+            
+            // Check if new data has more complete information
+            const hasMoreData = Object.values(newEntry).filter(v => v && v !== '0' && v !== 'N/A').length >
+                               Object.values(existingEntry).filter(v => v && v !== '0' && v !== 'N/A').length;
+            
+            if (hasMoreData) {
+              console.log(`   🔄 Updating existing entry with more complete data`);
+              existingDam.data[existingIndex] = newEntry;
+              dataChanged = true;
+            }
+          }
         }
       } else {
         console.log(`🆕 Creating new dam file for ${newDam.name}`);
