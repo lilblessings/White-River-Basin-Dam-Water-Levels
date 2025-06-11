@@ -1,48 +1,59 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
 const fs = require('fs').promises;
+const https = require('https');
 
 const folderName = 'historic_data';
 
-// Norfork Dam coordinates and specifications
+// Norfork Dam coordinates and specifications (from original)
 const damCoordinates = {
   'norfork': { latitude: 36.2483333, longitude: -92.24 }
 };
 
-// Map official names to display names
+// Map official names to display names (from original)
 const Names = {
   'NORFORK': 'Norfork'
 };
 
-// Dam specifications based on US Army Corps of Engineers and USGS data
-// All values in imperial units for US dams
+// Dam specifications (from original)
 const damSpecs = {
   'norfork': {
-    MWL: '580.00', // Maximum Water Level (top of dam) - feet
+    MWL: '590.00', // Updated to match new script
     MWLUnit: 'ft',
-    FRL: '552.00', // Full Recreation Level (normal conservation pool) - feet
+    FRL: '552.00',
     FRLUnit: 'ft',
-    floodPool: '580.00', // Top of flood pool - feet
+    floodPool: '580.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,580,000', // acre-feet at conservation pool (552 ft)
+    liveStorageAtFRL: '1,983,000', // Updated to match new script
     liveStorageAtFRLUnit: 'acre-ft',
-    ruleLevel: '510.00', // Rule curve level - feet
+    liveStorageAtFloodPool: '2,580,000',
+    ruleLevel: '552.00', // Updated
     ruleLevelUnit: 'ft',
-    blueLevel: '552.00', // Recreation level - feet
+    blueLevel: '552.00',
     blueLevelUnit: 'ft',
-    orangeLevel: '565.00', // Action level - feet
+    orangeLevel: '570.00', // Updated
     orangeLevelUnit: 'ft',
-    redLevel: '570.00', // Flood pool - feet
+    redLevel: '580.00', // Updated
     redLevelUnit: 'ft',
-    deadStorageLevel: '380.00', // Approximate dead storage level - feet
+    deadStorageLevel: '380.00',
     deadStorageLevelUnit: 'ft',
-    surfaceArea: '22,000', // acres at normal pool
+    surfaceArea: '22,000',
     surfaceAreaUnit: 'acres'
   }
 };
 
-// More accurate storage calculation based on Corps data and research
-// 100% = Flood Pool (580 ft), not Conservation Pool (552 ft)
+// USACE CDA API endpoints (from new script)
+const USACE_API_BASE = 'https://water.usace.army.mil/cda/reporting/providers/swl/timeseries';
+
+const API_ENDPOINTS = {
+  waterLevel: 'Norfork_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
+  inflow: 'Norfork_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
+  totalOutflow: 'Norfork_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
+  spillwayFlow: 'Norfork_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
+  storage: 'Norfork_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
+  powerGeneration: 'Norfork_Dam-House_Unit.Energy-Gen.Total.1Hour.1Hour.Decodes-rev',
+  precipitation: 'Norfork_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
+};
+
+// Storage calculation function (from original with improvements)
 const calculateStoragePercentage = (waterLevel, specs) => {
   if (!waterLevel || !specs) return '0.00';
   
@@ -52,13 +63,10 @@ const calculateStoragePercentage = (waterLevel, specs) => {
   const mwl = parseFloat(specs.MWL); // 590.00 ft (maximum)
   const deadLevel = parseFloat(specs.deadStorageLevel); // 380.00 ft
   
-  // 100% = 580 ft (flood pool), not 552 ft (conservation pool)
-  
   if (level <= deadLevel) {
     return '0.00'; // Dead storage
   } else if (level <= floodPool) {
     // Below flood pool (0% to 100%)
-    // Use exponential storage curve approximation
     const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
     const storageRatio = Math.pow(depthRatio, 2.2); // Exponential curve for reservoir
     const percentage = storageRatio * 100;
@@ -79,7 +87,7 @@ const calculateStoragePercentage = (waterLevel, specs) => {
   }
 };
 
-// Live storage calculation with 580 ft as 100% reference
+// Live storage calculation (from original)
 const calculateLiveStorage = (waterLevel, specs) => {
   if (!waterLevel || !specs) return '0';
   
@@ -116,453 +124,255 @@ const calculateLiveStorage = (waterLevel, specs) => {
   }
 };
 
-// Helper function to extract numeric values from Corps data
-const extractNumericValue = (text) => {
-  if (!text) return null;
-  
-  // Remove common units and extract number
-  const cleaned = text.replace(/[^\d.-]/g, '');
-  const number = parseFloat(cleaned);
-  
-  return isNaN(number) ? null : number.toString();
-};
-
-// Fetch rainfall data with multiple fallback options
-const fetchRainfallData = async () => {
-  // Try Weather.gov API first, then fallback to simpler options
-  
-  try {
-    console.log('Fetching rainfall data from Weather.gov...');
-    
-    // Use more precise Norfork Dam coordinates
-    const lat = 36.2483;
-    const lon = -92.2400;
-    
-    console.log(`Trying coordinates: ${lat}, ${lon}`);
-    
-    // Get current weather data
-    const weatherUrl = `https://api.weather.gov/points/${lat},${lon}`;
-    
-    const pointResponse = await axios.get(weatherUrl, {
+// HTTP request function (from new script)
+function makeRequest(url) {
+  return new Promise((resolve, reject) => {
+    const options = {
       headers: {
-        'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
-        'Accept': 'application/json'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
       },
-      timeout: 8000
-    });
-
-    console.log('✅ Got point data from Weather.gov');
-    const observationStationsUrl = pointResponse.data.properties.observationStations;
-    
-    // Get observation stations
-    const stationsResponse = await axios.get(observationStationsUrl, {
-      headers: {
-        'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
-        'Accept': 'application/json'
-      },
-      timeout: 8000
-    });
-
-    if (stationsResponse.data.features && stationsResponse.data.features.length > 0) {
-      // Get the nearest station
-      const nearestStation = stationsResponse.data.features[0].id;
-      console.log('Using weather station:', nearestStation);
-      
-      // Get latest observations
-      const observationsUrl = `https://api.weather.gov/stations/${nearestStation}/observations/latest`;
-      
-      const obsResponse = await axios.get(observationsUrl, {
-        headers: {
-          'User-Agent': 'NorforkDamScraper/1.0 (dam-monitoring@example.com)',
-          'Accept': 'application/json'
-        },
-        timeout: 8000
-      });
-
-      const observation = obsResponse.data.properties;
-      
-      // Get precipitation data (usually in mm, convert to inches)
-      let rainfall = '0';
-      
-      if (observation.precipitationLastHour && observation.precipitationLastHour.value !== null) {
-        // Convert mm to inches (1 mm = 0.0393701 inches)
-        const rainfallMm = observation.precipitationLastHour.value;
-        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
-        rainfall = rainfallInches;
-        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last hour`);
-      } else if (observation.precipitationLast3Hours && observation.precipitationLast3Hours.value !== null) {
-        // Use 3-hour precipitation if 1-hour not available
-        const rainfallMm = observation.precipitationLast3Hours.value;
-        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
-        rainfall = rainfallInches;
-        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last 3 hours`);
-      } else if (observation.precipitationLast6Hours && observation.precipitationLast6Hours.value !== null) {
-        // Use 6-hour precipitation as fallback
-        const rainfallMm = observation.precipitationLast6Hours.value;
-        const rainfallInches = (rainfallMm * 0.0393701).toFixed(2);
-        rainfall = rainfallInches;
-        console.log(`Found rainfall: ${rainfallMm} mm (${rainfallInches} inches) in last 6 hours`);
-      } else {
-        console.log('No recent precipitation data available from Weather.gov');
-        rainfall = '0';
-      }
-
-      return rainfall;
-    }
-
-    console.log('No weather stations found, trying fallback...');
-    throw new Error('No stations available');
-
-  } catch (weatherGovError) {
-    console.log(`Weather.gov failed (${weatherGovError.message}), trying fallback...`);
-    
-    // Fallback 1: Try USGS water data (sometimes includes precipitation)
-    try {
-      console.log('Trying USGS water data as fallback...');
-      
-      // USGS site near Norfork Dam
-      const usgsUrl = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=07055875&parameterCd=00045&period=P1D';
-      
-      const usgsResponse = await axios.get(usgsUrl, {
-        timeout: 5000
-      });
-      
-      if (usgsResponse.data && usgsResponse.data.value && usgsResponse.data.value.timeSeries) {
-        const timeSeries = usgsResponse.data.value.timeSeries[0];
-        if (timeSeries && timeSeries.values && timeSeries.values[0] && timeSeries.values[0].value) {
-          const latestValue = timeSeries.values[0].value[0];
-          if (latestValue && latestValue.value) {
-            const rainfall = parseFloat(latestValue.value).toFixed(2);
-            console.log(`Found rainfall from USGS: ${rainfall} inches`);
-            return rainfall;
-          }
-        }
-      }
-      
-      throw new Error('No USGS data available');
-      
-    } catch (usgsError) {
-      console.log(`USGS fallback failed (${usgsError.message})`);
-      
-      // Fallback 2: Check for any existing weather pattern or default to 0
-      console.log('All weather services failed, defaulting to 0');
-      return '0';
-    }
-  }
-};
-
-// Fetch data from Army Corps of Engineers official Norfork Dam page
-const fetchCorpsData = async () => {
-  try {
-    console.log('Fetching Army Corps of Engineers data...');
-    
-    const corpsUrl = 'https://www.swl-wc.usace.army.mil/pages/data/tabular/htm/norfork.htm';
-    
-    const response = await axios.get(corpsUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
-      },
-      timeout: 10000
-    });
-
-    const html = response.data;
-    const $ = cheerio.load(html);
-
-    console.log('Successfully fetched Corps page, parsing data...');
-    
-    // Get the full text content since it's pre-formatted text, not tables
-    const pageText = $('body').text();
-    console.log('Full page text length:', pageText.length);
-
-    // Initialize data structure
-    let corpsData = {
-      poolElevation: null,
-      tailwaterElevation: null,
-      spillwayRelease: null,
-      powerHouseDischarge: null,
-      totalOutflow: null,
-      powerGeneration: null,
-      inflow: null,
-      changeIn24Hours: null,
-      lastUpdate: null
+      timeout: 15000
     };
 
-    // Parse the pre-formatted text data
-    const lines = pageText.split('\n');
-    console.log(`Processing ${lines.length} lines of text...`);
+    const req = https.get(url, options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        resolve({
+          statusCode: res.statusCode,
+          data: data
+        });
+      });
+    });
 
-    // Find the data table section and get the most recent entry
-    let inDataSection = false;
-    let mostRecentDataLine = null;
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.setTimeout(15000);
+  });
+}
+
+// Time range function (from new script)
+function getTimeRange() {
+  const end = new Date();
+  const start = new Date(end.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days for more recent data
+  
+  return {
+    begin: start.toISOString(),
+    end: end.toISOString()
+  };
+}
+
+// Fetch USACE data function (from new script)
+async function fetchUSACEData(endpoint, parameter) {
+  const timeRange = getTimeRange();
+  const encodedEndpoint = encodeURIComponent(endpoint);
+  const url = `${USACE_API_BASE}?name=${encodedEndpoint}&begin=${timeRange.begin}&end=${timeRange.end}`;
+  
+  console.log(`📡 Fetching ${parameter} data from USACE API...`);
+  
+  try {
+    const response = await makeRequest(url);
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Look for the table header to identify data section
-      if (line.includes('Date') && line.includes('Elevation') && line.includes('Tailwater')) {
-        console.log('Found data table header at line', i);
-        inDataSection = true;
-        continue;
-      }
-      
-      // Skip separator lines
-      if (line.includes('_____') || line.length < 10) {
-        continue;
-      }
-      
-      // If we're in the data section, look for data lines
-      if (inDataSection) {
-        // Look for lines with date pattern (DDMMMYYYY format)
-        if (line.match(/\d{2}[A-Z]{3}2025/)) {
-          console.log('Found data line:', line);
-          mostRecentDataLine = line;
-          // Keep going to find the most recent (last) entry
-        }
-      }
+    if (response.statusCode !== 200) {
+      throw new Error(`USACE API returned status ${response.statusCode} for ${parameter}`);
     }
-
-    if (mostRecentDataLine) {
-      console.log('Processing most recent data line:', mostRecentDataLine);
-      
-      // Parse the fixed-width format more carefully
-      // The data appears to be in columns, let's extract by position
-      const line = mostRecentDataLine.trim();
-      
-      // Split by multiple spaces to get the columns
-      const parts = line.split(/\s+/);
-      console.log('Data parts:', parts);
-      console.log('Number of parts:', parts.length);
-      
-      if (parts.length >= 8) {
-        const date = parts[0]; // e.g., "10JUN2025"
-        const time = parts[1]; // e.g., "1000"
-        const elevation = parts[2]; // e.g., "576.79"
-        const tailwater = parts[3]; // e.g., "375.96"
-        const generation = parts[4]; // e.g., "37"
-        const turbineRelease = parts[5]; // e.g., "2449"
-        const siphon = parts[6]; // e.g., "0"
-        const spillwayRelease = parts[7]; // e.g., "0"
-        
-        // Total release is usually the last column
-        const totalRelease = parts.length > 8 ? parts[8] : turbineRelease;
-        
-        corpsData.poolElevation = elevation;
-        corpsData.tailwaterElevation = tailwater;
-        corpsData.powerGeneration = generation;
-        corpsData.powerHouseDischarge = generation;
-        corpsData.spillwayRelease = spillwayRelease;
-        corpsData.totalOutflow = totalRelease;
-        corpsData.lastUpdate = `${date} ${time}`;
-        
-        console.log('✅ Parsed data successfully:');
-        console.log('- Date/Time:', `${date} ${time}`);
-        console.log('- Pool Elevation:', elevation, 'ft');
-        console.log('- Tailwater:', tailwater, 'ft');
-        console.log('- Power Generation:', generation, 'MWh');
-        console.log('- Turbine Release:', turbineRelease, 'CFS');
-        console.log('- Spillway Release:', spillwayRelease, 'CFS');
-        console.log('- Total Release:', totalRelease, 'CFS');
-      } else {
-        console.log('⚠️ Data line does not have expected number of columns');
-        
-        // Try alternative parsing for different format
-        // Sometimes the data might be formatted differently
-        const elevationMatch = line.match(/(\d{3}\.\d{2})/);
-        if (elevationMatch) {
-          corpsData.poolElevation = elevationMatch[1];
-          console.log('- Found elevation from line:', elevationMatch[1]);
-        }
-        
-        // Look for discharge values (typically 3-4 digit numbers)
-        const dischargeMatches = line.match(/\b(\d{3,5})\b/g);
-        if (dischargeMatches && dischargeMatches.length > 0) {
-          // The largest number is usually total discharge
-          const discharges = dischargeMatches.map(d => parseInt(d));
-          corpsData.totalOutflow = Math.max(...discharges).toString();
-          console.log('- Found discharge from line:', corpsData.totalOutflow, 'CFS');
-        }
-      }
-    } else {
-      console.log('⚠️ No data lines found in expected format');
-      
-      // Try to find data lines with a different approach
-      console.log('Searching for any lines with elevation patterns...');
-      let mostRecentLine = null;
-      let mostRecentDate = '';
-      
-      for (const line of lines) {
-        if (line.match(/\d{3}\.\d{2}/) && line.length > 50) {
-          console.log('Potential data line found:', line);
-          
-          // Check if this looks like a data line with date
-          const dateMatch = line.match(/(\d{2}[A-Z]{3}2025)/);
-          if (dateMatch) {
-            const lineDate = dateMatch[1];
-            
-            // Parse this line in detail
-            const parts = line.trim().split(/\s+/);
-            console.log('Line parts:', parts);
-            
-            if (parts.length >= 8) {
-              const date = parts[0];     // 10JUN2025
-              const time = parts[1];     // 1000
-              const elevation = parts[2]; // 576.79
-              const tailwater = parts[3]; // 375.96
-              const generation = parts[4]; // 37
-              const turbineRelease = parts[5]; // 2449
-              const siphon = parts[6];   // 0
-              const spillwayRelease = parts[7]; // 0
-              const totalRelease = parts.length > 8 ? parts[8] : parts[5]; // 2449
-              
-              console.log(`📊 Parsed line: ${date} ${time}`);
-              console.log(`   Elevation: ${elevation}, Tailwater: ${tailwater}`);
-              console.log(`   Generation: ${generation}, Turbine: ${turbineRelease}`);
-              console.log(`   Spillway: ${spillwayRelease}, Total: ${totalRelease}`);
-              
-              // Keep track of the most recent (latest time)
-              if (lineDate >= mostRecentDate) {
-                mostRecentDate = lineDate;
-                mostRecentLine = {
-                  date: date,
-                  time: time,
-                  elevation: elevation,
-                  tailwater: tailwater,
-                  generation: generation,
-                  turbineRelease: turbineRelease,
-                  spillwayRelease: spillwayRelease,
-                  totalRelease: totalRelease
-                };
-              }
-            } else {
-              // Fallback parsing for lines with different format
-              for (let i = 0; i < parts.length; i++) {
-                const part = parts[i];
-                if (part.match(/\d{3}\.\d{2}/)) {
-                  const elevation = parseFloat(part);
-                  if (elevation >= 570 && elevation <= 590) {
-                    console.log('- Found elevation:', part);
-                    
-                    // Look for discharge values in subsequent parts
-                    for (let j = i + 1; j < parts.length; j++) {
-                      const dischargePart = parts[j];
-                      if (dischargePart.match(/^\d{3,5}$/)) {
-                        const discharge = parseInt(dischargePart);
-                        if (discharge > 1000 && discharge < 50000) {
-                          console.log('- Found discharge:', dischargePart, 'CFS');
-                          
-                          // Keep this as backup if no complete line found
-                          if (!mostRecentLine) {
-                            mostRecentLine = {
-                              elevation: part,
-                              totalRelease: dischargePart
-                            };
-                          }
-                          break;
-                        }
-                      }
-                    }
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      // Use the most recent complete data line
-      if (mostRecentLine) {
-        console.log('🎯 Using most recent data line:', mostRecentLine);
-        
-        corpsData.poolElevation = mostRecentLine.elevation;
-        corpsData.tailwaterElevation = mostRecentLine.tailwater || null;
-        corpsData.powerGeneration = mostRecentLine.generation || null;
-        corpsData.powerHouseDischarge = mostRecentLine.generation || null;
-        corpsData.spillwayRelease = mostRecentLine.spillwayRelease || null;
-        corpsData.totalOutflow = mostRecentLine.totalRelease || null;
-        corpsData.lastUpdate = mostRecentLine.date && mostRecentLine.time ? 
-          `${mostRecentLine.date} ${mostRecentLine.time}` : null;
-        
-        console.log('✅ Final extracted data:');
-        console.log('- Pool Elevation:', corpsData.poolElevation, 'ft');
-        console.log('- Tailwater Elevation:', corpsData.tailwaterElevation, 'ft');
-        console.log('- Power Generation:', corpsData.powerGeneration, 'MWh');
-        console.log('- Turbine Release:', corpsData.powerHouseDischarge, 'CFS');
-        console.log('- Spillway Release:', corpsData.spillwayRelease, 'CFS');
-        console.log('- Total Outflow:', corpsData.totalOutflow, 'CFS');
-        console.log('- Last Update:', corpsData.lastUpdate);
-      }
+    
+    const data = JSON.parse(response.data);
+    
+    if (!data.values || !Array.isArray(data.values)) {
+      console.log(`⚠️ No values found for ${parameter}`);
+      return new Map();
     }
-
-    // Also extract the current power pool from the header
-    const powerPoolMatch = pageText.match(/Current Power Pool:\s*(\d+\.\d+)/);
-    if (powerPoolMatch) {
-      console.log('Found current power pool:', powerPoolMatch[1]);
-      // Note: This might be different from the detailed elevation data
-    }
-
-    // Extract flood pool level
-    const floodPoolMatch = pageText.match(/Top Flood Pool:\s*(\d+\.\d+)/);
-    if (floodPoolMatch) {
-      console.log('Found flood pool level:', floodPoolMatch[1]);
-    }
-
-    // Alternative parsing for different formats
-    if (!corpsData.poolElevation) {
-      console.log('No data found in main parsing, trying alternative patterns...');
-      
-      // Look for the most recent elevation in the text
-      const elevationMatches = pageText.match(/(\d{3}\.\d{2})/g);
-      if (elevationMatches) {
-        // Filter for realistic pool elevations (570-590 range for current conditions)
-        const validElevations = elevationMatches
-          .map(e => parseFloat(e))
-          .filter(e => e >= 570 && e <= 590);
-        
-        if (validElevations.length > 0) {
-          // Use the most recent valid elevation
-          corpsData.poolElevation = validElevations[validElevations.length - 1].toString();
-          console.log(`Found elevation via pattern matching: ${corpsData.poolElevation}`);
-        }
-      }
-    }
-
-    // Validate the data
-    if (corpsData.poolElevation) {
-      const elevation = parseFloat(corpsData.poolElevation);
-      if (elevation < 400 || elevation > 600) {
-        console.log(`⚠️ Corps elevation ${elevation} seems unrealistic, setting to null`);
-        corpsData.poolElevation = null;
-      }
-    }
-
-    console.log('Final Corps data:', JSON.stringify(corpsData, null, 2));
-    return corpsData;
-
+    
+    console.log(`✅ Retrieved ${data.values.length} ${parameter} data points`);
+    
+    // Convert to Map with timestamp keys for easy lookup
+    const dataMap = new Map();
+    data.values.forEach(([timestamp, value]) => {
+      const date = new Date(timestamp);
+      // Create key: YYYY-MM-DD-HH for hourly matching
+      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}-${date.getHours().toString().padStart(2, '0')}`;
+      dataMap.set(key, value);
+    });
+    
+    return dataMap;
+    
   } catch (error) {
-    console.error('Error fetching Corps data:', error);
-    return null;
+    console.log(`⚠️ Error fetching ${parameter} data:`, error.message);
+    return new Map();
   }
-};
+}
 
-// Main function to fetch and compile dam data
+// Lake water temperature function (from new script)
+async function fetchLakeWaterTemperature() {
+  console.log('🌡️ Fetching lake water temperature...');
+  
+  try {
+    const response = await makeRequest('https://seatemperature.net/lakes/water-temp-in-norfork-lake');
+    
+    if (response.statusCode !== 200) {
+      throw new Error(`Temperature site returned status ${response.statusCode}`);
+    }
+    
+    // Try multiple patterns to extract temperature
+    let tempMatch = null;
+    let temperature = null;
+    
+    // Pattern 1: "66°F\nTODAY" (temperature before TODAY)
+    tempMatch = response.data.match(/(\d+)°F\s*\n\s*TODAY/);
+    if (tempMatch) {
+      temperature = parseInt(tempMatch[1]);
+      console.log(`✅ Retrieved lake water temperature: ${temperature}°F (Pattern: temp°F\\nTODAY)`);
+    }
+    
+    // Pattern 2: Try "Current Lake Water Temperature Information\n66°F"
+    if (!temperature) {
+      tempMatch = response.data.match(/Current Lake Water Temperature Information\s*\n\s*(\d+)°F/);
+      if (tempMatch) {
+        temperature = parseInt(tempMatch[1]);
+        console.log(`✅ Retrieved lake water temperature: ${temperature}°F (Pattern: after header)`);
+      }
+    }
+    
+    // Pattern 3: Try "water temperature today in Norfork Lake is 66°F"
+    if (!temperature) {
+      tempMatch = response.data.match(/water temperature today in Norfork Lake is (\d+)°F/);
+      if (tempMatch) {
+        temperature = parseInt(tempMatch[1]);
+        console.log(`✅ Retrieved lake water temperature: ${temperature}°F (Pattern: in sentence)`);
+      }
+    }
+    
+    if (temperature) {
+      return temperature.toString();
+    }
+    
+    console.log('⚠️ Could not extract temperature, defaulting to 0');
+    return '0';
+    
+  } catch (error) {
+    console.log(`⚠️ Error fetching lake water temperature:`, error.message);
+    return '0';
+  }
+}
+
+// Fetch all USACE data (from new script)
+async function fetchAllUSACEData() {
+  console.log('🚀 Fetching data from USACE CDA API...');
+  
+  try {
+    // Fetch all endpoints in parallel for speed
+    const [
+      waterLevelData,
+      inflowData, 
+      outflowData,
+      spillwayData,
+      storageData,
+      powerData,
+      precipData
+    ] = await Promise.all([
+      fetchUSACEData(API_ENDPOINTS.waterLevel, 'Water Level'),
+      fetchUSACEData(API_ENDPOINTS.inflow, 'Inflow'),
+      fetchUSACEData(API_ENDPOINTS.totalOutflow, 'Total Outflow'),
+      fetchUSACEData(API_ENDPOINTS.spillwayFlow, 'Spillway Flow'),
+      fetchUSACEData(API_ENDPOINTS.storage, 'Storage'),
+      fetchUSACEData(API_ENDPOINTS.powerGeneration, 'Power Generation'),
+      fetchUSACEData(API_ENDPOINTS.precipitation, 'Precipitation')
+    ]);
+    
+    return {
+      waterLevel: waterLevelData,
+      inflow: inflowData,
+      outflow: outflowData,
+      spillway: spillwayData,
+      storage: storageData,
+      power: powerData,
+      precipitation: precipData
+    };
+    
+  } catch (error) {
+    console.error('❌ Failed to fetch USACE data:', error.message);
+    throw error;
+  }
+}
+
+// Forward-fill rainfall data only (from new script)
+function forwardFillRainfall(precipitationMap, allTimestamps) {
+  const filledMap = new Map(precipitationMap);
+  const sortedTimestamps = Array.from(allTimestamps).sort();
+  
+  let lastValue = null;
+  let fillCount = 0;
+  
+  sortedTimestamps.forEach(timestamp => {
+    if (filledMap.has(timestamp)) {
+      lastValue = filledMap.get(timestamp);
+    } else if (lastValue !== null) {
+      filledMap.set(timestamp, lastValue);
+      fillCount++;
+    }
+  });
+  
+  return { filledMap, fillCount };
+}
+
+// Main data fetching function (combined approach)
 const fetchNorforkDamData = async () => {
   try {
-    console.log('Fetching Norfork Dam data...');
+    console.log('🚀 Fetching Norfork Dam data using enhanced API method...');
 
-    // Fetch data from Corps source and rainfall data
-    const [corpsData, rainfallData] = await Promise.all([
-      fetchCorpsData(),
-      fetchRainfallData()
+    // Fetch data from USACE APIs and lake temperature
+    const [usaceData, lakeTemperature] = await Promise.all([
+      fetchAllUSACEData(),
+      fetchLakeWaterTemperature()
     ]);
 
-    if (!corpsData || !corpsData.poolElevation) {
-      console.log('❌ No valid Corps data available');
+    // Get all unique timestamps
+    const allTimestamps = new Set();
+    Object.values(usaceData).forEach(dataMap => {
+      dataMap.forEach((_, timestamp) => {
+        allTimestamps.add(timestamp);
+      });
+    });
+
+    if (allTimestamps.size === 0) {
+      console.log('❌ No data available from USACE APIs');
+      return { dams: [] };
+    }
+
+    // Forward-fill rainfall data only
+    const { filledMap: filledPrecipitation } = forwardFillRainfall(usaceData.precipitation, allTimestamps);
+
+    // Get the most recent data point for live.json compatibility
+    const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first
+    const latestTimestamp = sortedTimestamps[0];
+    const [year, month, day, hour] = latestTimestamp.split('-');
+
+    // Get latest values
+    const waterLevel = usaceData.waterLevel.get(latestTimestamp);
+    const inflow = usaceData.inflow.get(latestTimestamp) || 0;
+    const totalOutflow = usaceData.outflow.get(latestTimestamp) || 0;
+    const spillwayFlow = usaceData.spillway.get(latestTimestamp) || 0;
+    const powerGen = usaceData.power.get(latestTimestamp) || 0;
+    const precipitation = filledPrecipitation.get(latestTimestamp) || 0;
+
+    if (!waterLevel) {
+      console.log('❌ No water level data available');
       return { dams: [] };
     }
 
@@ -572,11 +382,12 @@ const fetchNorforkDamData = async () => {
       day: 'numeric'
     });
 
-    const waterLevel = corpsData.poolElevation;
     const specs = damSpecs.norfork;
     const storagePercentage = calculateStoragePercentage(waterLevel, specs);
     const liveStorage = calculateLiveStorage(waterLevel, specs);
+    const turbineFlow = Math.max(0, totalOutflow - spillwayFlow);
 
+    // Create dam data in original format for compatibility
     const damData = {
       id: '1',
       name: Names.NORFORK,
@@ -591,28 +402,36 @@ const fetchNorforkDamData = async () => {
       latitude: damCoordinates.norfork.latitude,
       longitude: damCoordinates.norfork.longitude,
       data: [{
-        date: corpsData.lastUpdate || currentDate,
-        waterLevel: waterLevel,
+        date: `${day}.${month}.${year}`,
+        waterLevel: waterLevel.toFixed(2),
         liveStorage: liveStorage,
         storagePercentage: storagePercentage,
-        inflow: corpsData.inflow || '0', // Changed from 'N/A' to '0'
-        powerHouseDischarge: corpsData.powerHouseDischarge || '0',
-        spillwayRelease: corpsData.spillwayRelease || '0',
-        totalOutflow: corpsData.totalOutflow || '0',
-        rainfall: rainfallData || '0', // Use actual rainfall data or '0'
-        tailwaterElevation: corpsData.tailwaterElevation || '0',
-        powerGeneration: corpsData.powerGeneration || '0',
-        changeIn24Hours: corpsData.changeIn24Hours || '0',
-        dataSource: 'Army Corps of Engineers'
+        inflow: Math.round(inflow).toString(),
+        powerHouseDischarge: Math.round(turbineFlow).toString(),
+        spillwayRelease: Math.round(spillwayFlow).toString(),
+        totalOutflow: Math.round(totalOutflow).toString(),
+        rainfall: precipitation.toFixed(2),
+        tailwaterElevation: '0', // Not available in API
+        powerGeneration: Math.round(powerGen).toString(),
+        changeIn24Hours: '0', // Would need calculation
+        lakeWaterTemp: lakeTemperature,
+        dataSource: 'USACE CDA API (Enhanced)',
+        timestamp: `${year}-${month}-${day}T${hour}:00:00.000Z`
       }]
     };
 
-    console.log(`✅ Water Level: ${waterLevel} ft MSL`);
+    console.log(`✅ Water Level: ${waterLevel.toFixed(2)} ft MSL`);
     console.log(`✅ Storage: ${storagePercentage}% of capacity`);
-    console.log(`✅ Rainfall: ${rainfallData} inches`);
+    console.log(`✅ Inflow: ${Math.round(inflow)} CFS`);
+    console.log(`✅ Total Outflow: ${Math.round(totalOutflow)} CFS`);
+    console.log(`✅ Spillway: ${Math.round(spillwayFlow)} CFS`);
+    console.log(`✅ Turbine: ${Math.round(turbineFlow)} CFS`);
+    console.log(`✅ Power Generation: ${Math.round(powerGen)} MWh`);
+    console.log(`✅ Rainfall: ${precipitation.toFixed(2)} inches`);
+    console.log(`✅ Lake Temperature: ${lakeTemperature}°F`);
     
-    if (corpsData.spillwayRelease && parseFloat(corpsData.spillwayRelease) > 0) {
-      console.log(`⚠️  Spillway Release: ${corpsData.spillwayRelease} CFS`);
+    if (spillwayFlow > 0) {
+      console.log(`⚠️  Spillway Release: ${Math.round(spillwayFlow)} CFS`);
     }
 
     return { dams: [damData] };
@@ -623,10 +442,10 @@ const fetchNorforkDamData = async () => {
   }
 };
 
-// Main function to fetch dam details and update data files
+// Main function to fetch dam details and update data files (from original)
 async function fetchDamDetails() {
   try {
-    console.log('🚀 Starting Norfork Dam scraper...');
+    console.log('🚀 Starting Enhanced Norfork Dam scraper...');
     
     // Create folder if it doesn't exist
     try {
@@ -763,7 +582,7 @@ async function fetchDamDetails() {
 // Run the scraper
 if (require.main === module) {
   fetchDamDetails().then(() => {
-    console.log('Norfork Dam scraper completed successfully.');
+    console.log('Enhanced Norfork Dam scraper completed successfully.');
   }).catch(error => {
     console.error('Scraper failed:', error);
   });
@@ -772,6 +591,6 @@ if (require.main === module) {
 module.exports = {
   fetchDamDetails,
   fetchNorforkDamData,
-  fetchCorpsData,
-  fetchRainfallData
+  fetchAllUSACEData,
+  API_ENDPOINTS
 };
