@@ -16,6 +16,21 @@
     "inflowGaugeName": "North Fork River near Tecumseh, MO",
     "data": [
         {
+            "date": "11JUN2025 0600",
+            "waterLevel": "576.81",
+            "liveStorage": "2,490,333",
+            "storagePercentage": "96.52",
+            "inflow": "0",
+            "powerHouseDischarge": "33",
+            "spillwayRelease": "0",
+            "totalOutflow": "2211",
+            "rainfall": "0",
+            "tailwaterElevation": "375.69",
+            "powerGeneration": "33",
+            "changeIn24Hours": "0",
+            "dataSource": "Army Corps of Engineers"
+        },
+        {
             "date": "10JUN2025 2400",
             "waterLevel": "576.80",
             "liveStorage": "2,490,055",
