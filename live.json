@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "10JUN2025 1300",
+    "lastUpdate": "10JUN2025 1900",
     "dams": [
         {
             "id": "1",
@@ -10,23 +10,23 @@
             "liveStorageAtFRL": "2,580,000",
             "ruleLevel": "510.00",
             "blueLevel": "552.00",
-            "orangeLevel": "5650.00",
+            "orangeLevel": "565.00",
             "redLevel": "570.00",
             "latitude": 36.2483333,
             "longitude": -92.24,
             "data": [
                 {
-                    "date": "10JUN2025 1300",
+                    "date": "10JUN2025 1900",
                     "waterLevel": "576.79",
                     "liveStorage": "2,489,777",
                     "storagePercentage": "96.50",
                     "inflow": "0",
-                    "powerHouseDischarge": "37",
+                    "powerHouseDischarge": "79",
                     "spillwayRelease": "0",
-                    "totalOutflow": "2451",
+                    "totalOutflow": "5395",
                     "rainfall": "0",
-                    "tailwaterElevation": "375.98",
-                    "powerGeneration": "37",
+                    "tailwaterElevation": "376.06",
+                    "powerGeneration": "79",
                     "changeIn24Hours": "0",
                     "dataSource": "Army Corps of Engineers"
                 }
