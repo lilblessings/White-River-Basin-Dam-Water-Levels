@@ -370,22 +370,22 @@ const fetchNorforkDamData = async () => {
     const spillwayFlow = usaceData.spillway.get(latestTimestamp) || 0;
     const powerGen = usaceData.power.get(latestTimestamp) || 0;
     const precipitation = filledPrecipitation.get(latestTimestamp) || 0;
+    const storageAcreFeet = usaceData.storage.get(latestTimestamp) || 0; // Use API storage value
 
     if (!waterLevel) {
       console.log('❌ No water level data available');
       return { dams: [] };
     }
 
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
     const specs = damSpecs.norfork;
     const storagePercentage = calculateStoragePercentage(waterLevel, specs);
-    const liveStorage = calculateLiveStorage(waterLevel, specs);
+    const liveStorage = Math.round(storageAcreFeet).toLocaleString(); // Use API storage, formatted
     const turbineFlow = Math.max(0, totalOutflow - spillwayFlow);
+    const netFlow = Math.round(inflow - totalOutflow);
+    const turbineEfficiency = turbineFlow > 0 ? (powerGen / turbineFlow).toFixed(3) : '0.000';
+    
+    // Check if rainfall was forward-filled
+    const hasForwardFilledRainfall = !usaceData.precipitation.has(latestTimestamp) && filledPrecipitation.has(latestTimestamp);
 
     // Create dam data in original format for compatibility
     const damData = {
@@ -403,21 +403,24 @@ const fetchNorforkDamData = async () => {
       longitude: damCoordinates.norfork.longitude,
       data: [{
         date: `${day}.${month}.${year}`,
-        time: `${hour.padStart(2, '0')}:00`, // Add explicit time field for hourly tracking
+        time: `${hour.padStart(2, '0')}:00`,
         waterLevel: waterLevel.toFixed(2),
         liveStorage: liveStorage,
-        storagePercentage: storagePercentage,
+        storagePercentage: storagePercentage + '%',
         inflow: Math.round(inflow).toString(),
         powerHouseDischarge: Math.round(turbineFlow).toString(),
         spillwayRelease: Math.round(spillwayFlow).toString(),
         totalOutflow: Math.round(totalOutflow).toString(),
-        rainfall: precipitation.toFixed(2),
-        tailwaterElevation: '0', // Not available in API
         powerGeneration: Math.round(powerGen).toString(),
-        changeIn24Hours: '0', // Would need calculation
-        lakeWaterTemp: lakeTemperature,
-        dataSource: 'USACE CDA API (Enhanced)',
-        timestamp: `${year}-${month}-${day}T${hour.padStart(2, '0')}:00:00.000Z`
+        rainfall: precipitation.toFixed(2),
+        dataSource: 'USACE CDA API (Official)',
+        timestamp: `${year}-${month}-${day}T${hour.padStart(2, '0')}:00:00.000Z`,
+        // Additional calculated fields (like new script)
+        netFlow: netFlow,
+        turbineEfficiency: turbineEfficiency,
+        hasForwardFilledRainfall: hasForwardFilledRainfall,
+        lakeWaterTemp: `${lakeTemperature}°F`,
+        lakeWaterTempSource: 'SeaTemperature.net (Estimated)'
       }]
     };
 
