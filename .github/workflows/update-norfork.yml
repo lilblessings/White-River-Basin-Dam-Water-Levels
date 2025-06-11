@@ -1,10 +1,8 @@
 name: Update Norfork Dam Data
-
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch:
-
+    - cron: '10 * * * *'  # Every hour at 10 minutes past the hour
+  workflow_dispatch:  # Allows manual triggering
 jobs:
   fetch-dam-data:
     runs-on: ubuntu-latest
