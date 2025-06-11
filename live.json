@@ -15,24 +15,7 @@
             "latitude": 36.2483333,
             "longitude": -92.24,
             "data": [
-                {
-                    "date": "11.06.2025",
-                    "time": "18:00",
-                    "waterLevel": "576.80",
-                    "liveStorage": "2,490,055",
-                    "storagePercentage": "96.51",
-                    "inflow": "2563",
-                    "powerHouseDischarge": "2211",
-                    "spillwayRelease": "0",
-                    "totalOutflow": "2211",
-                    "rainfall": "19.96",
-                    "tailwaterElevation": "0",
-                    "powerGeneration": "1",
-                    "changeIn24Hours": "0",
-                    "lakeWaterTemp": "66",
-                    "dataSource": "USACE CDA API (Enhanced)",
-                    "timestamp": "2025-06-11T18:00:00.000Z"
-                }
+              
             ]
         }
     ]
