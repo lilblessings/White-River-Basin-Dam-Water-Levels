@@ -16,7 +16,7 @@ const Names = {
 // Dam specifications (from original)
 const damSpecs = {
   'norfork': {
-    MWL: '590.00', // Updated to match new script
+    MWL: '580.00', // Updated to match new script
     MWLUnit: 'ft',
     FRL: '552.00',
     FRLUnit: 'ft',
@@ -201,13 +201,23 @@ async function fetchUSACEData(endpoint, parameter) {
     
     console.log(`✅ Retrieved ${data.values.length} ${parameter} data points`);
     
+    // Show timezone example for debugging 
+    if (data.values.length > 0) {
+      const firstTimestamp = data.values[0][0];
+      const utcDate = new Date(firstTimestamp);
+      const localDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000));
+      console.log(`   🕐 Latest: ${firstTimestamp} (UTC) → ${localDate.getHours()}:${localDate.getMinutes().toString().padStart(2, '0')} Central`);
+    }
+    
     // Convert to Map with timestamp keys for easy lookup
     const dataMap = new Map();
     data.values.forEach(([timestamp, value]) => {
-      const date = new Date(timestamp);
-      // Create key: YYYY-MM-DD-HH for hourly matching
-      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}-${date.getHours().toString().padStart(2, '0')}`;
-      dataMap.set(key, value);
+      const utcDate = new Date(timestamp); // API timestamp in UTC
+      const localDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000)); // Convert to Central Time (CDT = UTC-5)
+      
+      // Create key using LOCAL time for matching: YYYY-MM-DD-HH
+      const key = `${localDate.getFullYear()}-${(localDate.getMonth() + 1).toString().padStart(2, '0')}-${localDate.getDate().toString().padStart(2, '0')}-${localDate.getHours().toString().padStart(2, '0')}`;
+      dataMap.set(key, { value, originalTimestamp: timestamp }); // Store both value and original UTC timestamp
     });
     
     return dataMap;
@@ -358,36 +368,94 @@ const fetchNorforkDamData = async () => {
     // Forward-fill rainfall data only
     const { filledMap: filledPrecipitation } = forwardFillRainfall(usaceData.precipitation, allTimestamps);
 
-    // Get the most recent data point for live.json compatibility
+    // Process ALL hourly data points, not just the latest
     const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first
-    const latestTimestamp = sortedTimestamps[0];
-    const [year, month, day, hour] = latestTimestamp.split('-');
-
-    // Get latest values
-    const waterLevel = usaceData.waterLevel.get(latestTimestamp);
-    const inflow = usaceData.inflow.get(latestTimestamp) || 0;
-    const totalOutflow = usaceData.outflow.get(latestTimestamp) || 0;
-    const spillwayFlow = usaceData.spillway.get(latestTimestamp) || 0;
-    const powerGen = usaceData.power.get(latestTimestamp) || 0;
-    const precipitation = filledPrecipitation.get(latestTimestamp) || 0;
-    const storageAcreFeet = usaceData.storage.get(latestTimestamp) || 0; // Use API storage value
-
-    if (!waterLevel) {
-      console.log('❌ No water level data available');
+    
+    if (sortedTimestamps.length === 0) {
+      console.log('❌ No data available from USACE APIs');
       return { dams: [] };
     }
 
-    const specs = damSpecs.norfork;
-    const storagePercentage = calculateStoragePercentage(waterLevel, specs);
-    const liveStorage = Math.round(storageAcreFeet).toLocaleString(); // Use API storage, formatted
-    const turbineFlow = Math.max(0, totalOutflow - spillwayFlow);
-    const netFlow = Math.round(inflow - totalOutflow);
-    const turbineEfficiency = turbineFlow > 0 ? (powerGen / turbineFlow).toFixed(3) : '0.000';
-    
-    // Check if rainfall was forward-filled
-    const hasForwardFilledRainfall = !usaceData.precipitation.has(latestTimestamp) && filledPrecipitation.has(latestTimestamp);
+    console.log(`📊 Processing ${sortedTimestamps.length} hourly data points...`);
 
-    // Create dam data in original format for compatibility
+    const specs = damSpecs.norfork;
+    const allDataPoints = [];
+
+    // Process each timestamp to create data points
+    for (const timestamp of sortedTimestamps) {
+      const [year, month, day, hour] = timestamp.split('-');
+
+      // Get values for this timestamp - now they include original UTC timestamps
+      const waterLevelData = usaceData.waterLevel.get(timestamp);
+      const inflowData = usaceData.inflow.get(timestamp);
+      const totalOutflowData = usaceData.outflow.get(timestamp);
+      const spillwayData = usaceData.spillway.get(timestamp);
+      const powerData = usaceData.power.get(timestamp);
+      const storageData = usaceData.storage.get(timestamp);
+      const precipitationData = filledPrecipitation.get(timestamp);
+
+      const waterLevel = waterLevelData ? waterLevelData.value : null;
+      const inflow = inflowData ? inflowData.value : 0;
+      const totalOutflow = totalOutflowData ? totalOutflowData.value : 0;
+      const spillwayFlow = spillwayData ? spillwayData.value : 0;
+      const powerGen = powerData ? powerData.value : 0;
+      const storageAcreFeet = storageData ? storageData.value : 0;
+      const precipitation = precipitationData ? (typeof precipitationData === 'object' ? precipitationData.value : precipitationData) : 0;
+
+      // Skip if no water level data (essential field)
+      if (!waterLevel || waterLevel <= 0) {
+        console.log(`⚠️ Skipping ${timestamp} - no water level data`);
+        continue;
+      }
+
+      // Calculate derived values
+      const storagePercentage = calculateStoragePercentage(waterLevel, specs);
+      const liveStorage = Math.round(storageAcreFeet).toLocaleString();
+      const turbineFlow = Math.max(0, totalOutflow - spillwayFlow);
+      const netFlow = Math.round(inflow - totalOutflow);
+      const turbineEfficiency = turbineFlow > 0 ? (powerGen / turbineFlow).toFixed(3) : '0.000';
+      
+      // Check if rainfall was forward-filled
+      const hasForwardFilledRainfall = !usaceData.precipitation.has(timestamp) && filledPrecipitation.has(timestamp);
+
+      // Use the original UTC timestamp from the API
+      const originalUTCTimestamp = waterLevelData ? waterLevelData.originalTimestamp : 
+                                   inflowData ? inflowData.originalTimestamp :
+                                   totalOutflowData ? totalOutflowData.originalTimestamp :
+                                   `${year}-${month}-${day}T${(parseInt(hour) + 5).toString().padStart(2, '0')}:00:00.000Z`;
+
+      const dataPoint = {
+        date: `${day}.${month}.${year}`,
+        time: `${hour.padStart(2, '0')}:00`, // Local Central Time
+        waterLevel: waterLevel.toFixed(2),
+        liveStorage: liveStorage,
+        storagePercentage: storagePercentage + '%',
+        inflow: Math.round(inflow).toString(),
+        powerHouseDischarge: Math.round(turbineFlow).toString(),
+        spillwayRelease: Math.round(spillwayFlow).toString(),
+        totalOutflow: Math.round(totalOutflow).toString(),
+        powerGeneration: Math.round(powerGen).toString(),
+        rainfall: precipitation.toFixed(2),
+        dataSource: 'USACE CDA API (Official)',
+        timestamp: originalUTCTimestamp, // Original UTC timestamp from API
+        netFlow: netFlow,
+        turbineEfficiency: turbineEfficiency,
+        hasForwardFilledRainfall: hasForwardFilledRainfall,
+        lakeWaterTemp: `${lakeTemperature}°F`,
+        lakeWaterTempSource: 'SeaTemperature.net (Estimated)'
+      };
+
+      allDataPoints.push(dataPoint);
+    }
+
+    if (allDataPoints.length === 0) {
+      console.log('❌ No valid hourly data points could be processed');
+      return { dams: [] };
+    }
+
+    console.log(`✅ Successfully processed ${allDataPoints.length} hourly data points`);
+
+    // Create dam data structure with ALL data points
     const damData = {
       id: '1',
       name: Names.NORFORK,
@@ -401,41 +469,16 @@ const fetchNorforkDamData = async () => {
       redLevel: specs.redLevel,
       latitude: damCoordinates.norfork.latitude,
       longitude: damCoordinates.norfork.longitude,
-      data: [{
-        date: `${day}.${month}.${year}`,
-        time: `${hour.padStart(2, '0')}:00`,
-        waterLevel: waterLevel.toFixed(2),
-        liveStorage: liveStorage,
-        storagePercentage: storagePercentage + '%',
-        inflow: Math.round(inflow).toString(),
-        powerHouseDischarge: Math.round(turbineFlow).toString(),
-        spillwayRelease: Math.round(spillwayFlow).toString(),
-        totalOutflow: Math.round(totalOutflow).toString(),
-        powerGeneration: Math.round(powerGen).toString(),
-        rainfall: precipitation.toFixed(2),
-        dataSource: 'USACE CDA API (Official)',
-        timestamp: `${year}-${month}-${day}T${hour.padStart(2, '0')}:00:00.000Z`,
-        // Additional calculated fields (like new script)
-        netFlow: netFlow,
-        turbineEfficiency: turbineEfficiency,
-        hasForwardFilledRainfall: hasForwardFilledRainfall,
-        lakeWaterTemp: `${lakeTemperature}°F`,
-        lakeWaterTempSource: 'SeaTemperature.net (Estimated)'
-      }]
+      data: allDataPoints // All hourly data points, not just the latest
     };
 
-    console.log(`✅ Water Level: ${waterLevel.toFixed(2)} ft MSL`);
-    console.log(`✅ Storage: ${storagePercentage}% of capacity`);
-    console.log(`✅ Inflow: ${Math.round(inflow)} CFS`);
-    console.log(`✅ Total Outflow: ${Math.round(totalOutflow)} CFS`);
-    console.log(`✅ Spillway: ${Math.round(spillwayFlow)} CFS`);
-    console.log(`✅ Turbine: ${Math.round(turbineFlow)} CFS`);
-    console.log(`✅ Power Generation: ${Math.round(powerGen)} MWh`);
-    console.log(`✅ Rainfall: ${precipitation.toFixed(2)} inches`);
-    console.log(`✅ Lake Temperature: ${lakeTemperature}°F`);
+    console.log(`✅ Water Level Range: ${allDataPoints[0].waterLevel} - ${allDataPoints[allDataPoints.length-1].waterLevel} ft MSL`);
+    console.log(`✅ Storage Range: ${allDataPoints[0].storagePercentage} - ${allDataPoints[allDataPoints.length-1].storagePercentage} of capacity`);
+    console.log(`✅ Time Range: ${allDataPoints[allDataPoints.length-1].time} to ${allDataPoints[0].time} on ${allDataPoints[0].date}`);
+    console.log(`✅ Total Data Points: ${allDataPoints.length} hourly records`);
     
-    if (spillwayFlow > 0) {
-      console.log(`⚠️  Spillway Release: ${Math.round(spillwayFlow)} CFS`);
+    if (allDataPoints.some(d => parseFloat(d.spillwayRelease) > 0)) {
+      console.log(`⚠️  Spillway releases detected in data range`);
     }
 
     return { dams: [damData] };
@@ -504,18 +547,53 @@ async function fetchDamDetails() {
       const existingDam = existingData[newDam.name];
 
       if (existingDam) {
-        console.log(`📊 Found existing data for ${newDam.name}`);
+        console.log(`📊 Found existing data for ${newDam.name} with ${existingDam.data.length} existing records`);
         
-        // Check if this exact timestamp already exists (hourly precision)
-        const newTimestamp = newDam.data[0].timestamp;
-        const timestampExists = existingDam.data.some(d => d.timestamp === newTimestamp);
+        let newPointsAdded = 0;
+        let pointsUpdated = 0;
+        
+        // Process each new data point
+        for (const newDataPoint of newDam.data) {
+          const newTimestamp = newDataPoint.timestamp;
+          const existingIndex = existingDam.data.findIndex(d => d.timestamp === newTimestamp);
 
-        if (!timestampExists) {
-          console.log(`➕ Adding new hourly data point for ${newDam.data[0].date} ${newDam.data[0].time || 'N/A'}`);
-          console.log(`   📅 Timestamp: ${newTimestamp}`);
-          
-          // Add new data point to the beginning (most recent first)
-          existingDam.data.unshift(newDam.data[0]);
+          if (existingIndex === -1) {
+            // New timestamp - add it in chronological order (newest first)
+            console.log(`➕ Adding new hourly data: ${newDataPoint.date} ${newDataPoint.time}`);
+            
+            // Find correct position to insert (maintain newest-first order)
+            let insertIndex = 0;
+            for (let i = 0; i < existingDam.data.length; i++) {
+              if (new Date(newDataPoint.timestamp) > new Date(existingDam.data[i].timestamp)) {
+                insertIndex = i;
+                break;
+              }
+              insertIndex = i + 1;
+            }
+            
+            existingDam.data.splice(insertIndex, 0, newDataPoint);
+            newPointsAdded++;
+            dataChanged = true;
+            
+          } else {
+            // Timestamp exists - check if new data is more complete
+            const existingEntry = existingDam.data[existingIndex];
+            const newEntry = newDataPoint;
+            
+            const hasMoreData = Object.values(newEntry).filter(v => v && v !== '0' && v !== 'N/A').length >
+                               Object.values(existingEntry).filter(v => v && v !== '0' && v !== 'N/A').length;
+            
+            if (hasMoreData) {
+              console.log(`   🔄 Updating ${newDataPoint.date} ${newDataPoint.time} with more complete data`);
+              existingDam.data[existingIndex] = newEntry;
+              pointsUpdated++;
+              dataChanged = true;
+            }
+          }
+        }
+        
+        if (newPointsAdded > 0 || pointsUpdated > 0) {
+          console.log(`   📈 Added ${newPointsAdded} new hourly records, updated ${pointsUpdated} existing records`);
           
           // Update dam specifications
           Object.assign(existingDam, {
@@ -531,31 +609,12 @@ async function fetchDamDetails() {
             latitude: newDam.latitude,
             longitude: newDam.longitude
           });
-          
-          dataChanged = true;
         } else {
-          console.log(`⏭️  Hourly data for timestamp ${newTimestamp} already exists, skipping`);
-          
-          // Optional: Update the existing entry if the new data is more complete
-          const existingIndex = existingDam.data.findIndex(d => d.timestamp === newTimestamp);
-          if (existingIndex !== -1) {
-            const existingEntry = existingDam.data[existingIndex];
-            const newEntry = newDam.data[0];
-            
-            // Check if new data has more complete information
-            const hasMoreData = Object.values(newEntry).filter(v => v && v !== '0' && v !== 'N/A').length >
-                               Object.values(existingEntry).filter(v => v && v !== '0' && v !== 'N/A').length;
-            
-            if (hasMoreData) {
-              console.log(`   🔄 Updating existing entry with more complete data`);
-              existingDam.data[existingIndex] = newEntry;
-              dataChanged = true;
-            }
-          }
+          console.log(`   ⏭️  All hourly data already exists and is complete`);
         }
+        
       } else {
-        console.log(`🆕 Creating new dam file for ${newDam.name}`);
-        // New dam, add entire data structure
+        console.log(`🆕 Creating new dam file for ${newDam.name} with ${newDam.data.length} hourly records`);
         existingData[newDam.name] = newDam;
         dataChanged = true;
       }
