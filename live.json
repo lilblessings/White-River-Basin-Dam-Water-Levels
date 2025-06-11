@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "11JUN2025 0600",
+    "lastUpdate": "11JUN2025 1200",
     "dams": [
         {
             "id": "1",
@@ -16,14 +16,14 @@
             "longitude": -92.24,
             "data": [
                 {
-                    "date": "11JUN2025 0600",
-                    "waterLevel": "576.81",
-                    "liveStorage": "2,490,333",
-                    "storagePercentage": "96.52",
+                    "date": "11JUN2025 1200",
+                    "waterLevel": "576.83",
+                    "liveStorage": "2,490,890",
+                    "storagePercentage": "96.55",
                     "inflow": "0",
                     "powerHouseDischarge": "33",
                     "spillwayRelease": "0",
-                    "totalOutflow": "2211",
+                    "totalOutflow": "2209",
                     "rainfall": "0",
                     "tailwaterElevation": "375.69",
                     "powerGeneration": "33",
