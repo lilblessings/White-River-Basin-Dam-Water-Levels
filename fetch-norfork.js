@@ -25,7 +25,7 @@ const damSpecs = {
     liveStorageAtFRL: '1,888,448', // Updated to match new script
     liveStorageAtFRLUnit: 'acre-ft',
     liveStorageAtFloodPool: '2,580,000',
-    ruleLevel: '552.00', // Updated
+    ruleLevel: '510.00', // Updated
     ruleLevelUnit: 'ft',
     blueLevel: '552.00',
     blueLevelUnit: 'ft',
