@@ -497,13 +497,13 @@ const fetchDamData = async (damName) => {
     console.log(`✅ Successfully processed ${allDataPoints.length} hourly data points for ${damName}`);
 
     // Get display name and coordinates
-    const displayName = Names[damName.toUpperCase().replace('SHOALS', '_SHOALS')] || damName;
+    const displayName = Names[damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS')] || damName;
     const coordinates = damCoordinates[damName];
 
     const damData = {
       id: damName === 'norfork' ? '1' : '2',
       name: displayName,
-      officialName: damName.toUpperCase().replace('SHOALS', '_SHOALS'),
+      officialName: damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS'),
       MWL: specs.MWL,
       FRL: specs.FRL,
       liveStorageAtFRL: specs.liveStorageAtFRL,
@@ -581,7 +581,9 @@ async function fetchDamDetails() {
     let dataChanged = false;
 
     for (const newDam of dams) {
-      console.log(`\n🔄 Processing dam: ${newDam.name}`);
+      console.log(`\n🔄 Processing dam: ${newDam.name} (ID: ${newDam.id})`);
+      console.log(`📋 Dam object keys:`, Object.keys(newDam));
+      console.log(`📋 Dam data points:`, newDam.data.length);
       const existingDam = existingData[newDam.name];
 
       if (existingDam) {
@@ -657,9 +659,21 @@ async function fetchDamDetails() {
 
     if (dataChanged) {
       console.log('💾 Saving files...');
+      console.log('🔍 Debug - existingData keys:', Object.keys(existingData));
+      console.log('🔍 Debug - existingData contents:');
+      for (const [key, value] of Object.entries(existingData)) {
+        console.log(`   - ${key}: ${value.name || 'NO NAME'} (${value.data ? value.data.length : 'NO DATA'} records)`);
+      }
       
       // Save individual dam files
       for (const [damName, damData] of Object.entries(existingData)) {
+        console.log(`💾 Saving file for dam: ${damName}`);
+        console.log(`📋 Dam data structure:`, {
+          name: damData.name,
+          dataPoints: damData.data ? damData.data.length : 'NO DATA ARRAY',
+          keys: Object.keys(damData)
+        });
+        
         const filename = `${folderName}/${damName}.json`;
         
         try {
