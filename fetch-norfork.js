@@ -3,22 +3,16 @@ const https = require('https');
 
 const folderName = 'historic_data';
 
-// Dam coordinates for all White River Basin dams
+// Dam coordinates and specifications
 const damCoordinates = {
   'norfork': { latitude: 36.2483333, longitude: -92.24 },
-  'bullshoals': { latitude: 36.3658, longitude: -92.5808 },
-  'tablerock': { latitude: 36.5958, longitude: -93.3108 },
-  'beaverlake': { latitude: 36.4281, longitude: -93.8472 },
-  'greersferryLake': { latitude: 35.5295, longitude: -92.0343 }
+  'bullshoals': { latitude: 36.3694, longitude: -92.5833 }
 };
 
 // Map official names to display names
 const Names = {
   'NORFORK': 'Norfork',
-  'BULLSHOALS': 'Bull Shoals',
-  'TABLEROCK': 'Table Rock',
-  'BEAVERLAKE': 'Beaver Lake',
-  'GREERSFERRYLAKE': 'Greers Ferry Lake'
+  'BULL_SHOALS': 'Bull Shoals'
 };
 
 // Dam specifications
@@ -47,100 +41,31 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'bullshoals': {
-    MWL: '695.00',
+    MWL: '695.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '654.00',
+    FRL: '654.00', // Top of conservation pool (power pool)
     FRLUnit: 'ft',
     floodPool: '695.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,360,000',
+    liveStorageAtFRL: '3,400,000', // Power drawdown storage
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '3,405,000',
-    ruleLevel: '620.00',
+    liveStorageAtFloodPool: '5,760,000', // Total storage
+    ruleLevel: '630.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
-    blueLevel: '654.00',
+    blueLevel: '654.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '675.00',
+    orangeLevel: '675.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '695.00',
+    redLevel: '695.00', // Top of flood pool
     redLevelUnit: 'ft',
-    deadStorageLevel: '477.00',
+    deadStorageLevel: '448.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
-    surfaceArea: '45,440',
-    surfaceAreaUnit: 'acres'
-  },
-  'tablerock': {
-    MWL: '931.00',
-    MWLUnit: 'ft',
-    FRL: '915.00',
-    FRLUnit: 'ft',
-    floodPool: '931.00',
-    floodPoolUnit: 'ft',
-    liveStorageAtFRL: '3,462,000',
-    liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '4,293,000',
-    ruleLevel: '895.00',
-    ruleLevelUnit: 'ft',
-    blueLevel: '915.00',
-    blueLevelUnit: 'ft',
-    orangeLevel: '923.00',
-    orangeLevelUnit: 'ft',
-    redLevel: '931.00',
-    redLevelUnit: 'ft',
-    deadStorageLevel: '737.00',
-    deadStorageLevelUnit: 'ft',
-    surfaceArea: '43,100',
-    surfaceAreaUnit: 'acres'
-  },
-  'beaverlake': {
-    MWL: '1130.00',
-    MWLUnit: 'ft',
-    FRL: '1120.00',
-    FRLUnit: 'ft',
-    floodPool: '1130.00',
-    floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,952,000',
-    liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '2,347,000',
-    ruleLevel: '1100.00',
-    ruleLevelUnit: 'ft',
-    blueLevel: '1120.00',
-    blueLevelUnit: 'ft',
-    orangeLevel: '1125.00',
-    orangeLevelUnit: 'ft',
-    redLevel: '1130.00',
-    redLevelUnit: 'ft',
-    deadStorageLevel: '935.00',
-    deadStorageLevelUnit: 'ft',
-    surfaceArea: '28,370',
-    surfaceAreaUnit: 'acres'
-  },
-  'greersferryLake': {
-    MWL: '487.00',
-    MWLUnit: 'ft',
-    FRL: '461.00',
-    FRLUnit: 'ft',
-    floodPool: '487.00',
-    floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,050,000',
-    liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '3,222,000',
-    ruleLevel: '440.00',
-    ruleLevelUnit: 'ft',
-    blueLevel: '461.00',
-    blueLevelUnit: 'ft',
-    orangeLevel: '474.00',
-    orangeLevelUnit: 'ft',
-    redLevel: '487.00',
-    redLevelUnit: 'ft',
-    deadStorageLevel: '335.00',
-    deadStorageLevelUnit: 'ft',
-    surfaceArea: '31,500',
+    surfaceArea: '45,440', // At conservation pool
     surfaceAreaUnit: 'acres'
   }
 };
 
-// USACE CDA API endpoints for each dam
+// USACE CDA API endpoints
 const USACE_API_BASE = 'https://water.usace.army.mil/cda/reporting/providers/swl/timeseries';
 
 const API_ENDPOINTS = {
@@ -157,51 +82,17 @@ const API_ENDPOINTS = {
     waterLevel: 'Bull_Shoals_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
     inflow: 'Bull_Shoals_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
     totalOutflow: 'Bull_Shoals_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Bull_Shoals_Dam.Flow-Spill.Ave.1Hour.1Hour.Regi-Comp', // Changed from Tainter Total
+    spillwayFlow: 'Bull_Shoals_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
     storage: 'Bull_Shoals_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Bull_Shoals_Dam-House_Unit 1.Energy-Gen.Total.1Hour.1Hour.Decodes-rev', // Added Unit 1
-    precipitation: 'Bull_Shoals_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
-  },
-  tablerock: {
-    waterLevel: 'Table_Rock_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
-    inflow: 'Table_Rock_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
-    totalOutflow: 'Table_Rock_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Table_Rock_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
-    storage: 'Table_Rock_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Table_Rock_Dam-House_Unit.Energy-Gen.Total.1Hour.1Hour.Decodes-rev',
-    precipitation: 'Table_Rock_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
-  },
-  beaverlake: {
-    waterLevel: 'Beaver_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
-    inflow: 'Beaver_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
-    totalOutflow: 'Beaver_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Beaver_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
-    storage: 'Beaver_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Beaver_Dam-House_Unit.Energy-Gen.Total.1Hour.1Hour.Decodes-rev',
-    precipitation: 'Beaver_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
-  },
-  greersferryLake: {
-    waterLevel: 'Greers_Ferry_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
-    inflow: 'Greers_Ferry_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
-    totalOutflow: 'Greers_Ferry_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Greers_Ferry_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
-    storage: 'Greers_Ferry_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Greers_Ferry_Dam-House_Unit.Energy-Gen.Total.1Hour.1Hour.Decodes-rev',
-    precipitation: 'Greers_Ferry_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
+    powerGeneration: 'Bull_Shoals_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
+    precipitation: 'Bull_Shoals_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev',
+    tailwaterLevel: 'Bull_Shoals_Dam-Tailwater.Elev-Downstream.Inst.1Hour.0.Decodes-rev',
+    floodPoolPercent: 'Bull_Shoals_Dam-Headwater.%-Flood Pool.Inst.1Hour.0.CCP-Comp'
   }
 };
 
-// Lake temperature URLs
-const LAKE_TEMP_URLS = {
-  norfork: 'https://seatemperature.net/lakes/water-temp-in-norfork-lake',
-  bullshoals: 'https://seatemperature.net/lakes/water-temp-in-bull-shoals-lake',
-  tablerock: 'https://seatemperature.net/lakes/water-temp-in-table-rock-lake',
-  beaverlake: 'https://seatemperature.net/lakes/water-temp-in-beaver-lake',
-  greersferryLake: 'https://seatemperature.net/lakes/water-temp-in-greers-ferry-lake'
-};
-
 // Storage calculation function
-const calculateStoragePercentage = (waterLevel, specs) => {
+const calculateStoragePercentage = (waterLevel, specs, damName) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
@@ -213,11 +104,13 @@ const calculateStoragePercentage = (waterLevel, specs) => {
   if (level <= deadLevel) {
     return '0.00';
   } else if (level <= floodPool) {
+    // Below flood pool (0% to 100%)
     const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
-    const storageRatio = Math.pow(depthRatio, 2.2);
+    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : 2.2);
     const percentage = storageRatio * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
+    // Above flood pool (100%+) - emergency/surcharge storage
     const baseStorage = 100;
     const surchargeDepth = level - floodPool;
     const maxSurchargeDepth = mwl - floodPool;
@@ -229,6 +122,47 @@ const calculateStoragePercentage = (waterLevel, specs) => {
     }
     
     return '100.00';
+  }
+};
+
+// Live storage calculation
+const calculateLiveStorage = (waterLevel, specs, damName) => {
+  if (!waterLevel || !specs) return '0';
+  
+  const level = parseFloat(waterLevel);
+  const frl = parseFloat(specs.FRL);
+  const floodPool = parseFloat(specs.floodPool);
+  const deadLevel = parseFloat(specs.deadStorageLevel);
+  
+  // Dam-specific storage calculations
+  let conservationStorage, floodPoolStorage;
+  if (damName === 'bullshoals') {
+    conservationStorage = 3400000; // acre-feet at 654 ft
+    floodPoolStorage = 5760000; // acre-feet at 695 ft
+  } else {
+    conservationStorage = 1983000; // acre-feet at 552 ft (Norfork)
+    floodPoolStorage = 2580000; // acre-feet at 580 ft
+  }
+  
+  if (level <= deadLevel) {
+    return '0';
+  } else if (level <= floodPool) {
+    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
+    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : 2.2);
+    const currentStorage = Math.round(floodPoolStorage * storageRatio);
+    return currentStorage.toLocaleString();
+  } else {
+    const baseStorage = floodPoolStorage;
+    const surchargeDepth = level - floodPool;
+    const maxSurchargeDepth = 10;
+    
+    if (surchargeDepth > 0 && maxSurchargeDepth > 0) {
+      const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
+      const additionalSurcharge = Math.round(floodPoolStorage * 0.15 * surchargeRatio);
+      return (baseStorage + additionalSurcharge).toLocaleString();
+    }
+    
+    return floodPoolStorage.toLocaleString();
   }
 };
 
@@ -277,7 +211,7 @@ function makeRequest(url) {
 // Time range function
 function getTimeRange() {
   const end = new Date();
-  const start = new Date(end.getTime() - (7 * 24 * 60 * 60 * 1000));
+  const start = new Date(end.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days
   
   return {
     begin: start.toISOString(),
@@ -286,33 +220,34 @@ function getTimeRange() {
 }
 
 // Fetch USACE data function
-async function fetchUSACEData(endpoint, parameter) {
+async function fetchUSACEData(endpoint, parameter, damName) {
   const timeRange = getTimeRange();
   const encodedEndpoint = encodeURIComponent(endpoint);
   const url = `${USACE_API_BASE}?name=${encodedEndpoint}&begin=${timeRange.begin}&end=${timeRange.end}`;
   
-  console.log(`📡 Fetching ${parameter} data...`);
+  console.log(`📡 Fetching ${damName} ${parameter} data from USACE API...`);
   
   try {
     const response = await makeRequest(url);
     
     if (response.statusCode !== 200) {
-      throw new Error(`USACE API returned status ${response.statusCode} for ${parameter}`);
+      throw new Error(`USACE API returned status ${response.statusCode} for ${damName} ${parameter}`);
     }
     
     const data = JSON.parse(response.data);
     
     if (!data.values || !Array.isArray(data.values)) {
-      console.log(`⚠️ No values found for ${parameter}`);
+      console.log(`⚠️ No values found for ${damName} ${parameter}`);
       return new Map();
     }
     
-    console.log(`✅ Retrieved ${data.values.length} ${parameter} data points`);
+    console.log(`✅ Retrieved ${data.values.length} ${damName} ${parameter} data points`);
     
+    // Convert to Map with timestamp keys
     const dataMap = new Map();
     data.values.forEach(([timestamp, value]) => {
       const utcDate = new Date(timestamp);
-      const localDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000));
+      const localDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000)); // Convert to Central Time
       
       const key = `${localDate.getFullYear()}-${(localDate.getMonth() + 1).toString().padStart(2, '0')}-${localDate.getDate().toString().padStart(2, '0')}-${localDate.getHours().toString().padStart(2, '0')}`;
       dataMap.set(key, { value, originalTimestamp: timestamp });
@@ -321,23 +256,27 @@ async function fetchUSACEData(endpoint, parameter) {
     return dataMap;
     
   } catch (error) {
-    console.log(`⚠️ Error fetching ${parameter} data:`, error.message);
+    console.log(`⚠️ Error fetching ${damName} ${parameter} data:`, error.message);
     return new Map();
   }
 }
 
-// Fetch lake water temperature
-async function fetchLakeWaterTemperature(damKey) {
-  const url = LAKE_TEMP_URLS[damKey];
-  if (!url) {
-    console.log(`⚠️ No temperature URL for ${damKey}`);
+// Lake water temperature function
+async function fetchLakeWaterTemperature(damName) {
+  console.log(`🌡️ Fetching ${damName} lake water temperature...`);
+  
+  let temperatureUrl;
+  if (damName === 'norfork') {
+    temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-norfork-lake';
+  } else if (damName === 'bullshoals') {
+    temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-bull-shoals-lake';
+  } else {
+    console.log(`⚠️ No temperature URL configured for ${damName}`);
     return '0';
   }
   
-  console.log(`🌡️ Fetching lake water temperature for ${damKey}...`);
-  
   try {
-    const response = await makeRequest(url);
+    const response = await makeRequest(temperatureUrl);
     
     if (response.statusCode !== 200) {
       throw new Error(`Temperature site returned status ${response.statusCode}`);
@@ -346,26 +285,26 @@ async function fetchLakeWaterTemperature(damKey) {
     let tempMatch = null;
     let temperature = null;
     
-    // Try multiple patterns
+    // Try multiple patterns to extract temperature
     tempMatch = response.data.match(/(\d+)°F\s*\n\s*TODAY/);
     if (tempMatch) {
       temperature = parseInt(tempMatch[1]);
-      console.log(`✅ Retrieved lake water temperature: ${temperature}°F`);
+      console.log(`✅ Retrieved ${damName} lake water temperature: ${temperature}°F`);
     }
     
     if (!temperature) {
       tempMatch = response.data.match(/Current Lake Water Temperature Information\s*\n\s*(\d+)°F/);
       if (tempMatch) {
         temperature = parseInt(tempMatch[1]);
-        console.log(`✅ Retrieved lake water temperature: ${temperature}°F`);
+        console.log(`✅ Retrieved ${damName} lake water temperature: ${temperature}°F`);
       }
     }
     
     if (!temperature) {
-      tempMatch = response.data.match(/water temperature today in .+ is (\d+)°F/);
+      tempMatch = response.data.match(/water temperature today in .* is (\d+)°F/);
       if (tempMatch) {
         temperature = parseInt(tempMatch[1]);
-        console.log(`✅ Retrieved lake water temperature: ${temperature}°F`);
+        console.log(`✅ Retrieved ${damName} lake water temperature: ${temperature}°F`);
       }
     }
     
@@ -373,61 +312,68 @@ async function fetchLakeWaterTemperature(damKey) {
       return temperature.toString();
     }
     
-    console.log('⚠️ Could not extract temperature, defaulting to 0');
+    console.log(`⚠️ Could not extract temperature for ${damName}, defaulting to 0`);
     return '0';
     
   } catch (error) {
-    console.log(`⚠️ Error fetching lake water temperature:`, error.message);
+    console.log(`⚠️ Error fetching ${damName} lake water temperature:`, error.message);
     return '0';
   }
 }
 
 // Fetch all USACE data for a specific dam
-async function fetchAllUSACEData(damKey) {
-  console.log(`🚀 Fetching data from USACE CDA API for ${Names[damKey.toUpperCase()]}...`);
+async function fetchAllUSACEData(damName) {
+  console.log(`🚀 Fetching data from USACE CDA API for ${damName}...`);
   
-  const endpoints = API_ENDPOINTS[damKey];
+  const endpoints = API_ENDPOINTS[damName];
   if (!endpoints) {
-    console.log(`❌ No API endpoints defined for ${damKey}`);
-    return null;
+    throw new Error(`No API endpoints configured for dam: ${damName}`);
   }
   
   try {
-    const [
-      waterLevelData,
-      inflowData, 
-      outflowData,
-      spillwayData,
-      storageData,
-      powerData,
-      precipData
-    ] = await Promise.all([
-      fetchUSACEData(endpoints.waterLevel, 'Water Level'),
-      fetchUSACEData(endpoints.inflow, 'Inflow'),
-      fetchUSACEData(endpoints.totalOutflow, 'Total Outflow'),
-      fetchUSACEData(endpoints.spillwayFlow, 'Spillway Flow'),
-      fetchUSACEData(endpoints.storage, 'Storage'),
-      fetchUSACEData(endpoints.powerGeneration, 'Power Generation'),
-      fetchUSACEData(endpoints.precipitation, 'Precipitation')
-    ]);
+    const promises = [
+      fetchUSACEData(endpoints.waterLevel, 'Water Level', damName),
+      fetchUSACEData(endpoints.inflow, 'Inflow', damName),
+      fetchUSACEData(endpoints.totalOutflow, 'Total Outflow', damName),
+      fetchUSACEData(endpoints.spillwayFlow, 'Spillway Flow', damName),
+      fetchUSACEData(endpoints.storage, 'Storage', damName),
+      fetchUSACEData(endpoints.powerGeneration, 'Power Generation', damName),
+      fetchUSACEData(endpoints.precipitation, 'Precipitation', damName)
+    ];
     
-    return {
-      waterLevel: waterLevelData,
-      inflow: inflowData,
-      outflow: outflowData,
-      spillway: spillwayData,
-      storage: storageData,
-      power: powerData,
-      precipitation: precipData
+    // Add extra endpoints for Bull Shoals if available
+    if (endpoints.tailwaterLevel) {
+      promises.push(fetchUSACEData(endpoints.tailwaterLevel, 'Tailwater Level', damName));
+    }
+    if (endpoints.floodPoolPercent) {
+      promises.push(fetchUSACEData(endpoints.floodPoolPercent, 'Flood Pool Percent', damName));
+    }
+    
+    const results = await Promise.all(promises);
+    
+    const dataObject = {
+      waterLevel: results[0],
+      inflow: results[1],
+      outflow: results[2],
+      spillway: results[3],
+      storage: results[4],
+      power: results[5],
+      precipitation: results[6]
     };
     
+    // Add extra data for Bull Shoals
+    if (results[7]) dataObject.tailwater = results[7];
+    if (results[8]) dataObject.floodPoolPercent = results[8];
+    
+    return dataObject;
+    
   } catch (error) {
-    console.error(`❌ Failed to fetch USACE data for ${damKey}:`, error.message);
-    return null;
+    console.error(`❌ Failed to fetch USACE data for ${damName}:`, error.message);
+    throw error;
   }
 }
 
-// Forward-fill rainfall data
+// Forward-fill rainfall data only
 function forwardFillRainfall(precipitationMap, allTimestamps) {
   const filledMap = new Map(precipitationMap);
   const sortedTimestamps = Array.from(allTimestamps).sort();
@@ -447,43 +393,39 @@ function forwardFillRainfall(precipitationMap, allTimestamps) {
   return { filledMap, fillCount };
 }
 
-// Fetch data for a single dam
-async function fetchSingleDamData(damKey) {
+// Main data fetching function for a specific dam
+const fetchDamData = async (damName) => {
   try {
-    console.log(`\n🏗️ Processing ${Names[damKey.toUpperCase()]} Dam...`);
+    console.log(`🚀 Fetching ${damName} Dam data using enhanced API method...`);
 
     const [usaceData, lakeTemperature] = await Promise.all([
-      fetchAllUSACEData(damKey),
-      fetchLakeWaterTemperature(damKey)
+      fetchAllUSACEData(damName),
+      fetchLakeWaterTemperature(damName)
     ]);
 
-    if (!usaceData) {
-      console.log(`❌ No USACE data available for ${damKey}`);
-      return null;
-    }
-
+    // Get all unique timestamps
     const allTimestamps = new Set();
     Object.values(usaceData).forEach(dataMap => {
-      if (dataMap) {
-        dataMap.forEach((_, timestamp) => {
-          allTimestamps.add(timestamp);
-        });
-      }
+      dataMap.forEach((_, timestamp) => {
+        allTimestamps.add(timestamp);
+      });
     });
 
     if (allTimestamps.size === 0) {
-      console.log(`❌ No data available from USACE APIs for ${damKey}`);
+      console.log(`❌ No data available from USACE APIs for ${damName}`);
       return null;
     }
 
-    const { filledMap: filledPrecipitation } = forwardFillRainfall(usaceData.precipitation || new Map(), allTimestamps);
-    const sortedTimestamps = Array.from(allTimestamps).sort().reverse();
-    
-    console.log(`📊 Processing ${sortedTimestamps.length} hourly data points for ${damKey}...`);
+    // Forward-fill rainfall data only
+    const { filledMap: filledPrecipitation } = forwardFillRainfall(usaceData.precipitation, allTimestamps);
 
-    const specs = damSpecs[damKey];
+    const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first
+    console.log(`📊 Processing ${sortedTimestamps.length} hourly data points for ${damName}...`);
+
+    const specs = damSpecs[damName];
     const allDataPoints = [];
 
+    // Process each timestamp
     for (const timestamp of sortedTimestamps) {
       const [year, month, day, hour] = timestamp.split('-');
 
@@ -503,17 +445,21 @@ async function fetchSingleDamData(damKey) {
       const storageAcreFeet = storageData ? storageData.value : 0;
       const precipitation = precipitationData ? (typeof precipitationData === 'object' ? precipitationData.value : precipitationData) : 0;
 
+      // Skip if no water level data
       if (!waterLevel || waterLevel <= 0) {
+        console.log(`⚠️ Skipping ${damName} ${timestamp} - no water level data`);
         continue;
       }
 
-      const storagePercentage = calculateStoragePercentage(waterLevel, specs);
+      // Calculate derived values
+      const storagePercentage = calculateStoragePercentage(waterLevel, specs, damName);
       const liveStorage = Math.round(storageAcreFeet).toLocaleString();
       const turbineFlow = Math.max(0, totalOutflow - spillwayFlow);
       const netFlow = Math.round(inflow - totalOutflow);
       const turbineEfficiency = turbineFlow > 0 ? (powerGen / turbineFlow).toFixed(3) : '0.000';
       
       const hasForwardFilledRainfall = !usaceData.precipitation.has(timestamp) && filledPrecipitation.has(timestamp);
+
       const originalUTCTimestamp = waterLevelData ? waterLevelData.originalTimestamp : 
                                    inflowData ? inflowData.originalTimestamp :
                                    totalOutflowData ? totalOutflowData.originalTimestamp :
@@ -544,16 +490,20 @@ async function fetchSingleDamData(damKey) {
     }
 
     if (allDataPoints.length === 0) {
-      console.log(`❌ No valid hourly data points could be processed for ${damKey}`);
+      console.log(`❌ No valid hourly data points could be processed for ${damName}`);
       return null;
     }
 
-    console.log(`✅ Successfully processed ${allDataPoints.length} hourly data points for ${damKey}`);
+    console.log(`✅ Successfully processed ${allDataPoints.length} hourly data points for ${damName}`);
+
+    // Get display name and coordinates
+    const displayName = Names[damName.toUpperCase().replace('SHOALS', '_SHOALS')] || damName;
+    const coordinates = damCoordinates[damName];
 
     const damData = {
-      id: (Object.keys(damCoordinates).indexOf(damKey) + 1).toString(),
-      name: Names[damKey.toUpperCase()],
-      officialName: damKey.toUpperCase(),
+      id: damName === 'norfork' ? '1' : '2',
+      name: displayName,
+      officialName: damName.toUpperCase().replace('SHOALS', '_SHOALS'),
       MWL: specs.MWL,
       FRL: specs.FRL,
       liveStorageAtFRL: specs.liveStorageAtFRL,
@@ -561,49 +511,26 @@ async function fetchSingleDamData(damKey) {
       blueLevel: specs.blueLevel,
       orangeLevel: specs.orangeLevel,
       redLevel: specs.redLevel,
-      latitude: damCoordinates[damKey].latitude,
-      longitude: damCoordinates[damKey].longitude,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
       data: allDataPoints
     };
 
-    console.log(`✅ Water Level Range: ${allDataPoints[0].waterLevel} - ${allDataPoints[allDataPoints.length-1].waterLevel} ft MSL`);
-    console.log(`✅ Storage Range: ${allDataPoints[0].storagePercentage} - ${allDataPoints[allDataPoints.length-1].storagePercentage} of capacity`);
+    console.log(`✅ ${damName} Water Level Range: ${allDataPoints[0].waterLevel} - ${allDataPoints[allDataPoints.length-1].waterLevel} ft MSL`);
+    console.log(`✅ ${damName} Storage Range: ${allDataPoints[0].storagePercentage} - ${allDataPoints[allDataPoints.length-1].storagePercentage} of capacity`);
     
-    if (allDataPoints.some(d => parseFloat(d.spillwayRelease) > 0)) {
-      console.log(`⚠️  Spillway releases detected in data range`);
-    }
-
     return damData;
 
   } catch (error) {
-    console.error(`Error fetching ${damKey} dam data:`, error);
+    console.error(`Error fetching ${damName} Dam data:`, error);
     return null;
   }
-}
+};
 
-// Main function to fetch all dam data
-async function fetchAllDamsData() {
-  const allDams = [];
-  
-  for (const damKey of Object.keys(damCoordinates)) {
-    try {
-      const damData = await fetchSingleDamData(damKey);
-      if (damData) {
-        allDams.push(damData);
-      }
-    } catch (error) {
-      console.error(`❌ Failed to process ${damKey}:`, error.message);
-    }
-  }
-  
-  return { dams: allDams };
-}
-
-// Main function to fetch dam details and update data files
+// Main function to fetch all dam details
 async function fetchDamDetails() {
   try {
-    console.log('🚀 Starting Multi-Dam White River Basin scraper...');
-    console.log(`📊 Processing ${Object.keys(damCoordinates).length} dams: ${Object.values(Names).join(', ')}`);
+    console.log('🚀 Starting Enhanced Multi-Dam scraper...');
     
     // Create folder if it doesn't exist
     try {
@@ -614,14 +541,19 @@ async function fetchDamDetails() {
       await fs.mkdir(folderName);
     }
 
-    const { dams } = await fetchAllDamsData();
-    console.log(`\n📊 Retrieved ${dams.length} dam(s) from data sources`);
+    // Fetch data for all dams
+    const damNames = ['norfork', 'bullshoals'];
+    const dams = [];
     
-    // Debug: Show which dams we got
-    console.log('🔍 Dams retrieved:');
-    dams.forEach(dam => {
-      console.log(`  - ${dam.name} (${dam.data.length} data points)`);
-    });
+    for (const damName of damNames) {
+      console.log(`\n=== Processing ${damName.toUpperCase()} Dam ===`);
+      const damData = await fetchDamData(damName);
+      if (damData) {
+        dams.push(damData);
+      }
+    }
+
+    console.log(`\n📊 Retrieved ${dams.length} dam(s) from data sources`);
 
     if (dams.length === 0) {
       console.log('❌ No dam data found - cannot create files.');
@@ -636,10 +568,10 @@ async function fetchDamDetails() {
       
       for (const file of files) {
         if (file.endsWith('.json')) {
-          const fileContent = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
-          const damName = fileContent.name || file.replace('.json', '');
-          existingData[damName] = fileContent;
-          console.log(`📄 Loaded existing data for ${damName}: ${fileContent.data.length} records`);
+          const damName = file.replace('.json', '');
+          const data = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
+          existingData[damName] = data;
+          console.log(`📄 Loaded existing data for ${damName}: ${data.data.length} records`);
         }
       }
     } catch (error) {
@@ -663,7 +595,7 @@ async function fetchDamDetails() {
           const existingIndex = existingDam.data.findIndex(d => d.timestamp === newTimestamp);
 
           if (existingIndex === -1) {
-            console.log(`➕ Adding new hourly data: ${newDataPoint.date} ${newDataPoint.time}`);
+            console.log(`➕ Adding new hourly data: ${newDam.name} ${newDataPoint.date} ${newDataPoint.time}`);
             
             let insertIndex = 0;
             for (let i = 0; i < existingDam.data.length; i++) {
@@ -686,7 +618,7 @@ async function fetchDamDetails() {
                                Object.values(existingEntry).filter(v => v && v !== '0' && v !== 'N/A').length;
             
             if (hasMoreData) {
-              console.log(`   🔄 Updating ${newDataPoint.date} ${newDataPoint.time} with more complete data`);
+              console.log(`   🔄 Updating ${newDam.name} ${newDataPoint.date} ${newDataPoint.time} with more complete data`);
               existingDam.data[existingIndex] = newEntry;
               pointsUpdated++;
               dataChanged = true;
@@ -695,7 +627,7 @@ async function fetchDamDetails() {
         }
         
         if (newPointsAdded > 0 || pointsUpdated > 0) {
-          console.log(`   📈 Added ${newPointsAdded} new hourly records, updated ${pointsUpdated} existing records`);
+          console.log(`   📈 ${newDam.name}: Added ${newPointsAdded} new records, updated ${pointsUpdated} existing records`);
           
           Object.assign(existingDam, {
             id: newDam.id,
@@ -711,7 +643,7 @@ async function fetchDamDetails() {
             longitude: newDam.longitude
           });
         } else {
-          console.log(`   ⏭️  All hourly data already exists and is complete`);
+          console.log(`   ⏭️  ${newDam.name}: All hourly data already exists and is complete`);
         }
         
       } else {
@@ -726,10 +658,9 @@ async function fetchDamDetails() {
     if (dataChanged) {
       console.log('💾 Saving files...');
       
+      // Save individual dam files
       for (const [damName, damData] of Object.entries(existingData)) {
-        // Use snake_case for filenames to avoid spaces
-        const safeFileName = damName.toLowerCase().replace(/\s+/g, '_');
-        const filename = `${folderName}/${safeFileName}.json`;
+        const filename = `${folderName}/${damName}.json`;
         
         try {
           await fs.writeFile(filename, JSON.stringify(damData, null, 4));
@@ -742,13 +673,11 @@ async function fetchDamDetails() {
         }
       }
 
+      // Save live JSON file with most recent data from all dams
       try {
         const liveData = {
-          lastUpdate: new Date().toISOString(),
-          dams: Object.values(existingData).map(dam => ({
-            ...dam,
-            data: dam.data.slice(0, 1) // Only include latest data point for live.json
-          }))
+          lastUpdate: dams[0].data[0].date,
+          dams
         };
         await fs.writeFile('live.json', JSON.stringify(liveData, null, 4));
         console.log('✅ Live dam data saved successfully in live.json.');
@@ -762,12 +691,6 @@ async function fetchDamDetails() {
       console.log('⏸️  No new data to save.');
     }
 
-    console.log('\n📊 Summary:');
-    console.log(`Total dams processed: ${dams.length}`);
-    for (const dam of dams) {
-      console.log(`- ${dam.name}: ${dam.data.length} hourly records`);
-    }
-
   } catch (error) {
     console.error('💥 Error in fetchDamDetails:', error);
   }
@@ -776,7 +699,7 @@ async function fetchDamDetails() {
 // Run the scraper
 if (require.main === module) {
   fetchDamDetails().then(() => {
-    console.log('\n✅ Multi-Dam White River Basin scraper completed successfully.');
+    console.log('Enhanced Multi-Dam scraper completed successfully.');
   }).catch(error => {
     console.error('Scraper failed:', error);
   });
@@ -784,10 +707,7 @@ if (require.main === module) {
 
 module.exports = {
   fetchDamDetails,
-  fetchAllDamsData,
-  fetchSingleDamData,
+  fetchDamData,
   fetchAllUSACEData,
-  API_ENDPOINTS,
-  damCoordinates,
-  damSpecs
+  API_ENDPOINTS
 };
