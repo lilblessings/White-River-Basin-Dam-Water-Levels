@@ -211,7 +211,7 @@ function makeRequest(url) {
 // Time range function
 function getTimeRange() {
   const end = new Date();
-  const start = new Date(end.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days
+  const start = new Date(end.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days
   
   return {
     begin: start.toISOString(),
@@ -568,7 +568,10 @@ async function fetchDamDetails() {
       
       for (const file of files) {
         if (file.endsWith('.json')) {
-          const damName = file.replace('.json', '');
+          // Handle both naming conventions: "Bull_Shoals.json" and "Bull Shoals.json"
+          const fileNameWithoutExt = file.replace('.json', '');
+          const damName = fileNameWithoutExt.replace(/_/g, ' '); // Convert underscores to spaces for consistent internal naming
+          
           const data = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
           existingData[damName] = data;
           console.log(`📄 Loaded existing data for ${damName}: ${data.data.length} records`);
@@ -665,30 +668,29 @@ async function fetchDamDetails() {
         console.log(`   - ${key}: ${value.name || 'NO NAME'} (${value.data ? value.data.length : 'NO DATA'} records)`);
       }
       
-     // Save individual dam files
-for (const [damName, damData] of Object.entries(existingData)) {
-  console.log(`💾 Saving file for dam: ${damName}`);
-  console.log(`📋 Dam data structure:`, {
-    name: damData.name,
-    dataPoints: damData.data ? damData.data.length : 'NO DATA ARRAY',
-    keys: Object.keys(damData)
-  });
-  
-  // ADD THIS LINE:
-  const safeFileName = damName.replace(/\s+/g, '_');
-  // CHANGE THIS LINE:
-  const filename = `${folderName}/${safeFileName}.json`;
-  
-  try {
-    await fs.writeFile(filename, JSON.stringify(damData, null, 4));
-    console.log(`✅ Details for dam ${damName} saved successfully in ${filename}.`);
-    
-    const stats = await fs.stat(filename);
-    console.log(`📁 File size: ${stats.size} bytes`);
-  } catch (writeError) {
-    console.error(`❌ Error writing ${filename}:`, writeError);
-  }
-}
+      // Save individual dam files
+      for (const [damName, damData] of Object.entries(existingData)) {
+        console.log(`💾 Saving file for dam: ${damName}`);
+        console.log(`📋 Dam data structure:`, {
+          name: damData.name,
+          dataPoints: damData.data ? damData.data.length : 'NO DATA ARRAY',
+          keys: Object.keys(damData)
+        });
+        
+        // Create filename without spaces for consistency
+        const safeFileName = damName.replace(/\s+/g, '_');
+        const filename = `${folderName}/${safeFileName}.json`;
+        
+        try {
+          await fs.writeFile(filename, JSON.stringify(damData, null, 4));
+          console.log(`✅ Details for dam ${damName} saved successfully in ${filename}.`);
+          
+          const stats = await fs.stat(filename);
+          console.log(`📁 File size: ${stats.size} bytes`);
+        } catch (writeError) {
+          console.error(`❌ Error writing ${filename}:`, writeError);
+        }
+      }
 
       // Save live JSON file with most recent data from all dams
       try {
