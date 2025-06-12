@@ -6,13 +6,17 @@ const folderName = 'historic_data';
 // Dam coordinates and specifications
 const damCoordinates = {
   'norfork': { latitude: 36.2483333, longitude: -92.24 },
-  'bullshoals': { latitude: 36.3694, longitude: -92.5833 }
+  'bullshoals': { latitude: 36.3694, longitude: -92.5833 },
+  'greersferry': { latitude: 35.4939, longitude: -92.0647 },
+  'tablerock': { latitude: 36.6117, longitude: -93.2951 }
 };
 
 // Map official names to display names
 const Names = {
   'NORFORK': 'Norfork',
-  'BULL_SHOALS': 'Bull Shoals'
+  'BULL_SHOALS': 'Bull Shoals',
+  'GREERS_FERRY': 'Greers Ferry',
+  'TABLE_ROCK': 'Table Rock'
 };
 
 // Dam specifications
@@ -38,6 +42,69 @@ const damSpecs = {
     deadStorageLevel: '380.00',
     deadStorageLevelUnit: 'ft',
     surfaceArea: '22,000',
+    surfaceAreaUnit: 'acres'
+  'greersferry': {
+    MWL: '470.00', // Top of flood control pool
+    MWLUnit: 'ft',
+    FRL: '462.00', // Top of conservation pool (normal pool)
+    FRLUnit: 'ft',
+    floodPool: '470.00',
+    floodPoolUnit: 'ft',
+    liveStorageAtFRL: '1,100,000', // Storage at conservation pool
+    liveStorageAtFRLUnit: 'acre-ft',
+    liveStorageAtFloodPool: '1,400,000', // Total storage
+    ruleLevel: '430.00', // Estimated minimum operating level
+    ruleLevelUnit: 'ft',
+    blueLevel: '462.00', // Conservation pool
+    blueLevelUnit: 'ft',
+    orangeLevel: '466.00', // Mid flood pool
+    orangeLevelUnit: 'ft',
+    redLevel: '470.00', // Top of flood pool
+    redLevelUnit: 'ft',
+    deadStorageLevel: '380.00', // Estimated dead storage level
+    deadStorageLevelUnit: 'ft',
+    surfaceArea: '31,500', // At normal pool
+    surfaceAreaUnit: 'acres'
+  greersferry: {
+    waterLevel: 'Greers_Ferry_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
+    inflow: 'Greers_Ferry_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
+    totalOutflow: 'Greers_Ferry_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
+    spillwayFlow: 'Greers_Ferry_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
+    storage: 'Greers_Ferry_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
+    powerGeneration: 'Greers_Ferry_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
+    precipitation: 'Greers_Ferry_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
+  },
+  tablerock: {
+    waterLevel: 'Table_Rock_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
+    inflow: 'Table_Rock_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
+    totalOutflow: 'Table_Rock_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
+    spillwayFlow: 'Table_Rock_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
+    storage: 'Table_Rock_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
+    powerGeneration: 'Table_Rock_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
+    precipitation: 'Table_Rock_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev',
+    tailwaterLevel: 'Table_Rock_Dam-Tailwater.Elev-Downstream.Inst.1Hour.0.Decodes-rev'
+  },
+  'tablerock': {
+    MWL: '931.00', // Top of flood control pool
+    MWLUnit: 'ft',
+    FRL: '915.00', // Top of conservation pool (normal pool)
+    FRLUnit: 'ft',
+    floodPool: '931.00',
+    floodPoolUnit: 'ft',
+    liveStorageAtFRL: '2,500,000', // Storage at conservation pool
+    liveStorageAtFRLUnit: 'acre-ft',
+    liveStorageAtFloodPool: '3,462,000', // Total storage
+    ruleLevel: '880.00', // Estimated minimum operating level
+    ruleLevelUnit: 'ft',
+    blueLevel: '915.00', // Conservation pool
+    blueLevelUnit: 'ft',
+    orangeLevel: '923.00', // Mid flood pool
+    orangeLevelUnit: 'ft',
+    redLevel: '931.00', // Top of flood pool
+    redLevelUnit: 'ft',
+    deadStorageLevel: '820.00', // Estimated dead storage level
+    deadStorageLevelUnit: 'ft',
+    surfaceArea: '43,100', // At normal pool
     surfaceAreaUnit: 'acres'
   },
   'bullshoals': {
@@ -106,7 +173,7 @@ const calculateStoragePercentage = (waterLevel, specs, damName) => {
   } else if (level <= floodPool) {
     // Below flood pool (0% to 100%)
     const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
-    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : 2.2);
+    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : damName === 'tablerock' ? 2.3 : 2.2);
     const percentage = storageRatio * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
@@ -139,6 +206,12 @@ const calculateLiveStorage = (waterLevel, specs, damName) => {
   if (damName === 'bullshoals') {
     conservationStorage = 3400000; // acre-feet at 654 ft
     floodPoolStorage = 5760000; // acre-feet at 695 ft
+  } else if (damName === 'greersferry') {
+    conservationStorage = 1100000; // acre-feet at 462 ft
+    floodPoolStorage = 1400000; // acre-feet at 470 ft
+  } else if (damName === 'tablerock') {
+    conservationStorage = 2500000; // acre-feet at 915 ft
+    floodPoolStorage = 3462000; // acre-feet at 931 ft
   } else {
     conservationStorage = 1983000; // acre-feet at 552 ft (Norfork)
     floodPoolStorage = 2580000; // acre-feet at 580 ft
@@ -148,7 +221,7 @@ const calculateLiveStorage = (waterLevel, specs, damName) => {
     return '0';
   } else if (level <= floodPool) {
     const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
-    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : 2.2);
+    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : damName === 'tablerock' ? 2.3 : 2.2);
     const currentStorage = Math.round(floodPoolStorage * storageRatio);
     return currentStorage.toLocaleString();
   } else {
@@ -270,6 +343,10 @@ async function fetchLakeWaterTemperature(damName) {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-norfork-lake';
   } else if (damName === 'bullshoals') {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-bull-shoals-lake';
+  } else if (damName === 'greersferry') {
+    temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-greers-ferry-lake';
+  } else if (damName === 'tablerock') {
+    temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-table-rock-lake';
   } else {
     console.log(`⚠️ No temperature URL configured for ${damName}`);
     return '0';
@@ -341,7 +418,7 @@ async function fetchAllUSACEData(damName) {
       fetchUSACEData(endpoints.precipitation, 'Precipitation', damName)
     ];
     
-    // Add extra endpoints for Bull Shoals if available
+    // Add extra endpoints for Bull Shoals and Table Rock if available
     if (endpoints.tailwaterLevel) {
       promises.push(fetchUSACEData(endpoints.tailwaterLevel, 'Tailwater Level', damName));
     }
@@ -361,7 +438,7 @@ async function fetchAllUSACEData(damName) {
       precipitation: results[6]
     };
     
-    // Add extra data for Bull Shoals
+    // Add extra data for Bull Shoals and Table Rock
     if (results[7]) dataObject.tailwater = results[7];
     if (results[8]) dataObject.floodPoolPercent = results[8];
     
@@ -497,13 +574,13 @@ const fetchDamData = async (damName) => {
     console.log(`✅ Successfully processed ${allDataPoints.length} hourly data points for ${damName}`);
 
     // Get display name and coordinates
-    const displayName = Names[damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS')] || damName;
+    const displayName = Names[damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS').replace('GREERSFERRY', 'GREERS_FERRY').replace('TABLEROCK', 'TABLE_ROCK')] || damName;
     const coordinates = damCoordinates[damName];
 
     const damData = {
-      id: damName === 'norfork' ? '1' : '2',
+      id: damName === 'norfork' ? '1' : damName === 'bullshoals' ? '2' : damName === 'greersferry' ? '3' : '4',
       name: displayName,
-      officialName: damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS'),
+      officialName: damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS').replace('GREERSFERRY', 'GREERS_FERRY').replace('TABLEROCK', 'TABLE_ROCK'),
       MWL: specs.MWL,
       FRL: specs.FRL,
       liveStorageAtFRL: specs.liveStorageAtFRL,
@@ -542,7 +619,7 @@ async function fetchDamDetails() {
     }
 
     // Fetch data for all dams
-    const damNames = ['norfork', 'bullshoals'];
+    const damNames = ['norfork', 'bullshoals', 'greersferry', 'tablerock'];
     const dams = [];
     
     for (const damName of damNames) {
