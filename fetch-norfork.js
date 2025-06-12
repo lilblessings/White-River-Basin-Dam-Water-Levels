@@ -157,9 +157,9 @@ const API_ENDPOINTS = {
     waterLevel: 'Bull_Shoals_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
     inflow: 'Bull_Shoals_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
     totalOutflow: 'Bull_Shoals_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Bull_Shoals_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
+    spillwayFlow: 'Bull_Shoals_Dam.Flow-Spill.Ave.1Hour.1Hour.Regi-Comp', // Changed from Tainter Total
     storage: 'Bull_Shoals_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Bull_Shoals_Dam-House_Unit.Energy-Gen.Total.1Hour.1Hour.Decodes-rev',
+    powerGeneration: 'Bull_Shoals_Dam-House_Unit 1.Energy-Gen.Total.1Hour.1Hour.Decodes-rev', // Added Unit 1
     precipitation: 'Bull_Shoals_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
   },
   tablerock: {
@@ -616,6 +616,12 @@ async function fetchDamDetails() {
 
     const { dams } = await fetchAllDamsData();
     console.log(`\n📊 Retrieved ${dams.length} dam(s) from data sources`);
+    
+    // Debug: Show which dams we got
+    console.log('🔍 Dams retrieved:');
+    dams.forEach(dam => {
+      console.log(`  - ${dam.name} (${dam.data.length} data points)`);
+    });
 
     if (dams.length === 0) {
       console.log('❌ No dam data found - cannot create files.');
@@ -630,10 +636,10 @@ async function fetchDamDetails() {
       
       for (const file of files) {
         if (file.endsWith('.json')) {
-          const damName = file.replace('.json', '');
-          const data = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
-          existingData[damName] = data;
-          console.log(`📄 Loaded existing data for ${damName}: ${data.data.length} records`);
+          const fileContent = JSON.parse(await fs.readFile(`${folderName}/${file}`, 'utf8'));
+          const damName = fileContent.name || file.replace('.json', '');
+          existingData[damName] = fileContent;
+          console.log(`📄 Loaded existing data for ${damName}: ${fileContent.data.length} records`);
         }
       }
     } catch (error) {
@@ -721,7 +727,9 @@ async function fetchDamDetails() {
       console.log('💾 Saving files...');
       
       for (const [damName, damData] of Object.entries(existingData)) {
-        const filename = `${folderName}/${damName}.json`;
+        // Use snake_case for filenames to avoid spaces
+        const safeFileName = damName.toLowerCase().replace(/\s+/g, '_');
+        const filename = `${folderName}/${safeFileName}.json`;
         
         try {
           await fs.writeFile(filename, JSON.stringify(damData, null, 4));
