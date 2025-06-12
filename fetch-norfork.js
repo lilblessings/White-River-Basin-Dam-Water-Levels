@@ -665,27 +665,30 @@ async function fetchDamDetails() {
         console.log(`   - ${key}: ${value.name || 'NO NAME'} (${value.data ? value.data.length : 'NO DATA'} records)`);
       }
       
-      // Save individual dam files
-      for (const [damName, damData] of Object.entries(existingData)) {
-        console.log(`💾 Saving file for dam: ${damName}`);
-        console.log(`📋 Dam data structure:`, {
-          name: damData.name,
-          dataPoints: damData.data ? damData.data.length : 'NO DATA ARRAY',
-          keys: Object.keys(damData)
-        });
-        
-        const filename = `${folderName}/${damName}.json`;
-        
-        try {
-          await fs.writeFile(filename, JSON.stringify(damData, null, 4));
-          console.log(`✅ Details for dam ${damName} saved successfully in ${filename}.`);
-          
-          const stats = await fs.stat(filename);
-          console.log(`📁 File size: ${stats.size} bytes`);
-        } catch (writeError) {
-          console.error(`❌ Error writing ${filename}:`, writeError);
-        }
-      }
+     // Save individual dam files
+for (const [damName, damData] of Object.entries(existingData)) {
+  console.log(`💾 Saving file for dam: ${damName}`);
+  console.log(`📋 Dam data structure:`, {
+    name: damData.name,
+    dataPoints: damData.data ? damData.data.length : 'NO DATA ARRAY',
+    keys: Object.keys(damData)
+  });
+  
+  // ADD THIS LINE:
+  const safeFileName = damName.replace(/\s+/g, '_');
+  // CHANGE THIS LINE:
+  const filename = `${folderName}/${safeFileName}.json`;
+  
+  try {
+    await fs.writeFile(filename, JSON.stringify(damData, null, 4));
+    console.log(`✅ Details for dam ${damName} saved successfully in ${filename}.`);
+    
+    const stats = await fs.stat(filename);
+    console.log(`📁 File size: ${stats.size} bytes`);
+  } catch (writeError) {
+    console.error(`❌ Error writing ${filename}:`, writeError);
+  }
+}
 
       // Save live JSON file with most recent data from all dams
       try {
