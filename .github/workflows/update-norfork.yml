@@ -1,8 +1,9 @@
-name: Update Norfork Dam Data
+name: Update Multi-Dam Data
 on:
   schedule:
     - cron: '10 * * * *'  # Every hour at 10 minutes past the hour
   workflow_dispatch:  # Allows manual triggering
+
 jobs:
   fetch-dam-data:
     runs-on: ubuntu-latest
@@ -19,13 +20,20 @@ jobs:
     - name: Install dependencies
       run: npm install axios cheerio
       
-    - name: Run Norfork Dam scraper
-      run: node fetch-norfork.js
+    - name: Run Multi-Dam scraper
+      run: node fetch-norfork.js  # Or whatever your new file is named
+      
+    - name: Debug - List created files
+      run: |
+        echo "=== Files in historic_data ==="
+        ls -la historic_data/ || echo "historic_data directory doesn't exist"
+        echo "=== All JSON files ==="
+        find . -name "*.json" -type f || echo "No JSON files found"
       
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add historic_data/Norfork.json live.json
-        git diff --staged --quiet || git commit -m "Update Norfork Dam data - $(date)"
+        git add historic_data/*.json live.json
+        git diff --staged --quiet || git commit -m "Update Multi-Dam data (Norfork + Bull Shoals) - $(date)"
         git push
