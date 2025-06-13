@@ -76,9 +76,9 @@ const damSpecs = {
     FRLUnit: 'ft',
     floodPool: '463.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,400,000', // Storage at conservation pool
+    liveStorageAtFRL: '2,844,500', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '1,400,000', // Total storage
+    liveStorageAtFloodPool: '2,844,500', // Total storage
     ruleLevel: '435.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '462.00', // Conservation pool
