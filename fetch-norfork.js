@@ -961,14 +961,31 @@ async function fetchDamDetails() {
         }
       }
 
-      // Save live JSON file with most recent data from all dams
+      // Save live JSON file with ONLY THE LATEST data from all dams
       try {
+        const liveDams = dams.map(dam => ({
+          id: dam.id,
+          name: dam.name,
+          officialName: dam.officialName,
+          MWL: dam.MWL,
+          FRL: dam.FRL,
+          liveStorageAtFRL: dam.liveStorageAtFRL,
+          ruleLevel: dam.ruleLevel,
+          blueLevel: dam.blueLevel,
+          orangeLevel: dam.orangeLevel,
+          redLevel: dam.redLevel,
+          latitude: dam.latitude,
+          longitude: dam.longitude,
+          data: [dam.data[0]] // ONLY the latest entry (first in array since sorted newest first)
+        }));
+
         const liveData = {
           lastUpdate: dams[0].data[0].date,
-          dams
+          dams: liveDams
         };
+        
         await fs.writeFile('live.json', JSON.stringify(liveData, null, 4));
-        console.log('✅ Live dam data saved successfully in live.json.');
+        console.log('✅ Live dam data saved successfully in live.json (latest entries only).');
         
         const liveStats = await fs.stat('live.json');
         console.log(`📁 Live file size: ${liveStats.size} bytes`);
