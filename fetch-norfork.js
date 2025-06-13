@@ -491,14 +491,16 @@ async function fetchAllUSACEData(damName) {
   }
 }
 
-// Forward-fill rainfall data only
-function forwardFillRainfall(precipitationMap, allTimestamps) {
+// Process rainfall data to calculate incremental values
+function processIncrementalRainfall(precipitationMap, allTimestamps) {
   const filledMap = new Map(precipitationMap);
-  const sortedTimestamps = Array.from(allTimestamps).sort();
+  const incrementalMap = new Map();
+  const sortedTimestamps = Array.from(allTimestamps).sort(); // oldest first for processing
   
   let lastValue = null;
   let fillCount = 0;
   
+  // First pass: forward-fill missing values
   sortedTimestamps.forEach(timestamp => {
     if (filledMap.has(timestamp)) {
       lastValue = filledMap.get(timestamp);
@@ -508,7 +510,33 @@ function forwardFillRainfall(precipitationMap, allTimestamps) {
     }
   });
   
-  return { filledMap, fillCount };
+  // Second pass: calculate incremental rainfall
+  let previousValue = null;
+  sortedTimestamps.forEach(timestamp => {
+    if (filledMap.has(timestamp)) {
+      const currentReading = filledMap.get(timestamp);
+      const currentValue = typeof currentReading === 'object' ? currentReading.value : currentReading;
+      
+      if (previousValue !== null) {
+        // Calculate incremental rainfall
+        const increment = Math.max(0, currentValue - previousValue);
+        incrementalMap.set(timestamp, {
+          value: increment,
+          originalTimestamp: typeof currentReading === 'object' ? currentReading.originalTimestamp : null
+        });
+      } else {
+        // First reading - assume no previous rainfall
+        incrementalMap.set(timestamp, {
+          value: 0,
+          originalTimestamp: typeof currentReading === 'object' ? currentReading.originalTimestamp : null
+        });
+      }
+      
+      previousValue = currentValue;
+    }
+  });
+  
+  return { incrementalMap, fillCount };
 }
 
 // Main data fetching function for a specific dam
@@ -534,8 +562,8 @@ const fetchDamData = async (damName) => {
       return null;
     }
 
-    // Forward-fill rainfall data only
-    const { filledMap: filledPrecipitation } = forwardFillRainfall(usaceData.precipitation, allTimestamps);
+    // Process rainfall data to calculate incremental values
+    const { incrementalMap: incrementalPrecipitation } = processIncrementalRainfall(usaceData.precipitation, allTimestamps);
 
     const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first
     console.log(`📊 Processing ${sortedTimestamps.length} hourly data points for ${damName}...`);
@@ -551,9 +579,9 @@ const fetchDamData = async (damName) => {
       const inflowData = usaceData.inflow.get(timestamp);
       const totalOutflowData = usaceData.outflow.get(timestamp);
       const spillwayData = usaceData.spillway.get(timestamp);
+      const precipitationData = incrementalPrecipitation.get(timestamp);
       const powerData = usaceData.power.get(timestamp);
       const storageData = usaceData.storage.get(timestamp);
-      const precipitationData = filledPrecipitation.get(timestamp);
 
       const waterLevel = waterLevelData ? waterLevelData.value : null;
       const inflow = inflowData ? inflowData.value : 0;
@@ -561,7 +589,7 @@ const fetchDamData = async (damName) => {
       const spillwayFlow = spillwayData ? spillwayData.value : 0;
       const powerGen = powerData ? powerData.value : 0;
       const storageAcreFeet = storageData ? storageData.value : 0;
-      const precipitation = precipitationData ? (typeof precipitationData === 'object' ? precipitationData.value : precipitationData) : 0;
+      const precipitation = precipitationData ? precipitationData.value : 0;
 
       // Skip if no water level data
       if (!waterLevel || waterLevel <= 0) {
@@ -576,7 +604,7 @@ const fetchDamData = async (damName) => {
       const netFlow = Math.round(inflow - totalOutflow);
       const turbineEfficiency = turbineFlow > 0 ? (powerGen / turbineFlow).toFixed(3) : '0.000';
       
-      const hasForwardFilledRainfall = !usaceData.precipitation.has(timestamp) && filledPrecipitation.has(timestamp);
+      const hasForwardFilledRainfall = !usaceData.precipitation.has(timestamp) && incrementalPrecipitation.has(timestamp);
 
       const originalUTCTimestamp = waterLevelData ? waterLevelData.originalTimestamp : 
                                    inflowData ? inflowData.originalTimestamp :
