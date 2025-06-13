@@ -1024,7 +1024,24 @@ async function fetchDamDetails() {
 
       // Save live JSON file with ONLY THE LATEST data from all dams
       try {
-        const liveDams = dams.map(dam => ({
+        // Load existing live.json if it exists
+        let existingLiveData = { lastUpdate: '', dams: [] };
+        try {
+          const liveJsonContent = await fs.readFile('live.json', 'utf8');
+          existingLiveData = JSON.parse(liveJsonContent);
+          console.log(`📄 Loaded existing live.json with ${existingLiveData.dams.length} dams`);
+        } catch (readError) {
+          console.log('📝 No existing live.json found, creating new one...');
+        }
+
+        // Create a map of existing dams by ID for easy lookup
+        const existingDamsById = new Map();
+        existingLiveData.dams.forEach(dam => {
+          existingDamsById.set(dam.id, dam);
+        });
+
+        // Update/add only the dams we successfully fetched new data for
+        const newlyFetchedDams = dams.map(dam => ({
           id: dam.id,
           name: dam.name,
           officialName: dam.officialName,
@@ -1040,13 +1057,22 @@ async function fetchDamDetails() {
           data: [dam.data[0]] // ONLY the latest entry (first in array since sorted newest first)
         }));
 
+        // Update existing dams with new data, or add them if they don't exist
+        newlyFetchedDams.forEach(newDam => {
+          existingDamsById.set(newDam.id, newDam);
+          console.log(`✅ Updated/added ${newDam.name} in live data`);
+        });
+
+        // Convert back to array, sorted by ID
+        const updatedDams = Array.from(existingDamsById.values()).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+
         const liveData = {
-          lastUpdate: dams[0].data[0].date,
-          dams: liveDams
+          lastUpdate: dams.length > 0 ? dams[0].data[0].date : existingLiveData.lastUpdate,
+          dams: updatedDams
         };
         
         await fs.writeFile('live.json', JSON.stringify(liveData, null, 4));
-        console.log('✅ Live dam data saved successfully in live.json (latest entries only).');
+        console.log(`✅ Live dam data saved successfully in live.json (${updatedDams.length} total dams, ${newlyFetchedDams.length} updated).`);
         
         const liveStats = await fs.stat('live.json');
         console.log(`📁 Live file size: ${liveStats.size} bytes`);
