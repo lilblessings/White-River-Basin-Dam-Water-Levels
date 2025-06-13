@@ -51,13 +51,13 @@ const damSpecs = {
   'bullshoals': {
     MWL: '695.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '654.00', // Top of conservation pool (power pool)
+    FRL: '662.00', // Top of conservation pool (power pool)
     FRLUnit: 'ft',
     floodPool: '695.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '3,400,000', // Power drawdown storage
+    liveStorageAtFRL: '5,408,000', // Power drawdown storage
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '5,760,000', // Total storage
+    liveStorageAtFloodPool: '5,408,000', // Total storage
     ruleLevel: '630.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '654.00', // Conservation pool
@@ -72,22 +72,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'greersferry': {
-    MWL: '470.00', // Top of flood control pool
+    MWL: '487.00', // Top of flood control pool
     MWLUnit: 'ft',
     FRL: '462.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '470.00',
+    floodPool: '487.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,100,000', // Storage at conservation pool
+    liveStorageAtFRL: '2,844,500', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '1,400,000', // Total storage
-    ruleLevel: '430.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '2,844,500', // Total storage
+    ruleLevel: '435.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '462.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '466.00', // Mid flood pool
+    orangeLevel: '475.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '470.00', // Top of flood pool
+    redLevel: '487.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '380.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
@@ -97,11 +97,11 @@ const damSpecs = {
   'tablerock': {
     MWL: '931.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '915.00', // Top of conservation pool (normal pool)
+    FRL: '917.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '931.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,500,000', // Storage at conservation pool
+    liveStorageAtFRL: '3,462,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
     liveStorageAtFloodPool: '3,462,000', // Total storage
     ruleLevel: '880.00', // Estimated minimum operating level
@@ -141,22 +141,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'clearwater': {
-    MWL: '384.00', // Top of flood control pool
+    MWL: '567.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '359.00', // Top of conservation pool (normal pool)
+    FRL: '497.82', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '384.00',
+    floodPool: '567.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '150,000', // Storage at conservation pool
+    liveStorageAtFRL: '413,700', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '210,000', // Total storage
+    liveStorageAtFloodPool: '413,700', // Total storage
     ruleLevel: '320.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
-    blueLevel: '359.00', // Conservation pool
+    blueLevel: '497.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '371.00', // Mid flood pool
+    orangeLevel: '560.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '384.00', // Top of flood pool
+    redLevel: '567.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '280.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
