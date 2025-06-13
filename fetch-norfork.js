@@ -120,14 +120,14 @@ const damSpecs = {
   'beaver': {
     MWL: '1130.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '1120.00', // Top of conservation pool (normal pool)
+    FRL: '1,121.43', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '1130.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,590,000', // Storage at conservation pool
+    liveStorageAtFRL: '1,947,382', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '2,250,000', // Total storage
-    ruleLevel: '1080.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '1,947,382', // Total storage
+    ruleLevel: '1077.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '1120.00', // Conservation pool
     blueLevelUnit: 'ft',
