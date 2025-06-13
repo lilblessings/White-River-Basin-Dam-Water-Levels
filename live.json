@@ -2,6 +2,42 @@
     "lastUpdate": "13.06.2025",
     "dams": [
         {
+            "id": "1",
+            "name": "Norfork",
+            "officialName": "NORFORK",
+            "MWL": "580.00",
+            "FRL": "552.00",
+            "liveStorageAtFRL": "1,888,448",
+            "ruleLevel": "510.00",
+            "blueLevel": "552.00",
+            "orangeLevel": "570.00",
+            "redLevel": "580.00",
+            "latitude": 36.2483333,
+            "longitude": -92.24,
+            "data": [
+                {
+                    "date": "13.06.2025",
+                    "time": "14:00",
+                    "waterLevel": "576.84",
+                    "liveStorage": "1,796,403",
+                    "storagePercentage": "96.56%",
+                    "inflow": "2737",
+                    "powerHouseDischarge": "2344",
+                    "spillwayRelease": "0",
+                    "totalOutflow": "2344",
+                    "powerGeneration": "1",
+                    "rainfall": "0.00",
+                    "dataSource": "USACE CDA API (Official)",
+                    "timestamp": "2025-06-13T19:00:00Z",
+                    "netFlow": 393,
+                    "turbineEfficiency": "0.000",
+                    "hasForwardFilledRainfall": false,
+                    "lakeWaterTemp": "66°F",
+                    "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
+                }
+            ]
+        },
+        {
             "id": "2",
             "name": "Bull Shoals",
             "officialName": "BULL_SHOALS",
