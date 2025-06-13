@@ -233,19 +233,15 @@ const calculateStoragePercentage = (waterLevel, specs, damName) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL);          // Top of conservation pool
-  const floodPool = parseFloat(specs.floodPool); // Top of flood pool
+  const floodPool = parseFloat(specs.floodPool); // Top of flood pool = 100%
   const deadLevel = parseFloat(specs.deadStorageLevel);
   
   if (level <= deadLevel) {
     return '0.00';
-  } else if (level <= frl) {
-    // 0% to 100% between dead storage and conservation pool
-    const percentage = ((level - deadLevel) / (frl - deadLevel)) * 100;
-    return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else if (level <= floodPool) {
-    // Already at 100% - this is flood storage above conservation
-    return '100.00';
+    // 0% to 100% between dead storage and top of flood pool
+    const percentage = ((level - deadLevel) / (floodPool - deadLevel)) * 100;
+    return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
     // Above flood pool - emergency storage (100%+)
     return '100.00';
