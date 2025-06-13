@@ -465,13 +465,13 @@ async function fetchNWSPrecipitation(damName, timeRange) {
   }
 }
 
-// Enhanced fetch USACE data function with NWS precipitation fallback
-async function fetchUSACEData(endpoint, parameter, damName) {
+// Enhanced fetch USACE data function with NWS precipitation fallback and retry for critical data
+async function fetchUSACEData(endpoint, parameter, damName, retryCount = 0) {
   const timeRange = getTimeRange();
   const encodedEndpoint = encodeURIComponent(endpoint);
   const url = `${USACE_API_BASE}?name=${encodedEndpoint}&begin=${timeRange.begin}&end=${timeRange.end}`;
   
-  console.log(`📡 Fetching ${damName} ${parameter} data from USACE API...`);
+  console.log(`📡 Fetching ${damName} ${parameter} data from USACE API${retryCount > 0 ? ` (retry ${retryCount})` : ''}...`);
   
   try {
     const response = await makeRequest(url);
@@ -509,6 +509,20 @@ async function fetchUSACEData(endpoint, parameter, damName) {
       dataMap.set(key, { value, originalTimestamp: timestamp });
     });
     
+    // Check if we got suspicious zero values for critical flow data and retry if needed
+    const isCriticalFlowData = parameter === 'Inflow' || parameter === 'Total Outflow';
+    if (isCriticalFlowData && retryCount < 2 && dataMap.size > 0) {
+      // Get the most recent value to check
+      const sortedKeys = Array.from(dataMap.keys()).sort().reverse();
+      const latestValue = dataMap.get(sortedKeys[0])?.value;
+      
+      if (latestValue === 0 || latestValue === null || latestValue === undefined) {
+        console.log(`⚠️ Got suspicious zero/null value for ${damName} ${parameter}: ${latestValue}, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+        return await fetchUSACEData(endpoint, parameter, damName, retryCount + 1);
+      }
+    }
+    
     return dataMap;
     
   } catch (error) {
@@ -516,6 +530,14 @@ async function fetchUSACEData(endpoint, parameter, damName) {
     if (parameter === 'Precipitation') {
       console.log(`⚠️ USACE precipitation error for ${damName}, trying NWS fallback:`, error.message);
       return await fetchNWSPrecipitation(damName, timeRange);
+    }
+    
+    // Retry for critical flow data on error
+    const isCriticalFlowData = parameter === 'Inflow' || parameter === 'Total Outflow';
+    if (isCriticalFlowData && retryCount < 2) {
+      console.log(`⚠️ Error fetching ${damName} ${parameter}, retrying in 2 seconds:`, error.message);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return await fetchUSACEData(endpoint, parameter, damName, retryCount + 1);
     }
     
     console.log(`⚠️ Error fetching ${damName} ${parameter} data:`, error.message);
