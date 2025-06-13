@@ -165,13 +165,13 @@ const API_ENDPOINTS = {
     floodPoolPercent: 'Bull_Shoals_Dam-Headwater.%-Flood Pool.Inst.1Hour.0.CCP-Comp'
   },
   greersferry: {
-    waterLevel: 'Greers_Ferry_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
-    inflow: 'Greers_Ferry_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
-    totalOutflow: 'Greers_Ferry_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
-    spillwayFlow: 'Greers_Ferry_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
-    storage: 'Greers_Ferry_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
-    powerGeneration: 'Greers_Ferry_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
-    precipitation: 'Greers_Ferry_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
+    waterLevel: 'GreersFerry_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
+    inflow: 'GreersFerry_Dam.Flow-Res In.Ave.1Hour.1Hour.6hr-RunAve-A2W',
+    totalOutflow: 'GreersFerry_Dam.Flow-Res Out.Ave.1Hour.1Hour.Regi-Comp',
+    spillwayFlow: 'GreersFerry_Dam.Flow-Tainter Total.Ave.1Hour.1Hour.Regi-Comp',
+    storage: 'GreersFerry_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
+    powerGeneration: 'GreersFerry_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
+    precipitation: 'GreersFerry_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
   },
   tablerock: {
     waterLevel: 'Table_Rock_Dam-Headwater.Elev.Inst.1Hour.0.Decodes-rev',
