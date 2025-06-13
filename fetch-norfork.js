@@ -331,7 +331,104 @@ function getTimeRange() {
   };
 }
 
-// Fetch USACE data function
+// Fetch precipitation data from NWS API as fallback
+async function fetchNWSPrecipitation(damName, timeRange) {
+  console.log(`🌦️ Fetching precipitation data from NWS API for ${damName}...`);
+  
+  // Get coordinates for the dam
+  const coordinates = damCoordinates[damName];
+  if (!coordinates) {
+    console.log(`⚠️ No coordinates found for ${damName}`);
+    return new Map();
+  }
+  
+  try {
+    // First, get the NWS grid point for the dam location
+    const pointUrl = `https://api.weather.gov/points/${coordinates.latitude},${coordinates.longitude}`;
+    const pointResponse = await makeRequest(pointUrl);
+    
+    if (pointResponse.statusCode !== 200) {
+      throw new Error(`NWS Point API returned status ${pointResponse.statusCode}`);
+    }
+    
+    const pointData = JSON.parse(pointResponse.data);
+    const gridId = pointData.properties.gridId;
+    const gridX = pointData.properties.gridX;
+    const gridY = pointData.properties.gridY;
+    
+    console.log(`📍 NWS Grid for ${damName}: ${gridId} ${gridX},${gridY}`);
+    
+    // Get observations from the nearest weather station
+    const stationsUrl = `https://api.weather.gov/gridpoints/${gridId}/${gridX},${gridY}/stations`;
+    const stationsResponse = await makeRequest(stationsUrl);
+    
+    if (stationsResponse.statusCode !== 200) {
+      throw new Error(`NWS Stations API returned status ${stationsResponse.statusCode}`);
+    }
+    
+    const stationsData = JSON.parse(stationsResponse.data);
+    
+    if (!stationsData.features || stationsData.features.length === 0) {
+      throw new Error('No weather stations found for this location');
+    }
+    
+    // Try the first few stations until we get data
+    for (let i = 0; i < Math.min(3, stationsData.features.length); i++) {
+      const stationId = stationsData.features[i].properties.stationIdentifier;
+      console.log(`🌧️ Trying station ${stationId} for ${damName}...`);
+      
+      try {
+        const obsUrl = `https://api.weather.gov/stations/${stationId}/observations?start=${timeRange.begin}&end=${timeRange.end}`;
+        const obsResponse = await makeRequest(obsUrl);
+        
+        if (obsResponse.statusCode === 200) {
+          const obsData = JSON.parse(obsResponse.data);
+          
+          if (obsData.features && obsData.features.length > 0) {
+            console.log(`✅ Retrieved ${obsData.features.length} precipitation observations from ${stationId}`);
+            
+            // Convert NWS observations to our format
+            const precipMap = new Map();
+            obsData.features.forEach(obs => {
+              if (obs.properties.precipitationLastHour && obs.properties.precipitationLastHour.value !== null) {
+                const timestamp = obs.properties.timestamp;
+                const utcDate = new Date(timestamp);
+                const localDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000));
+                
+                const key = `${localDate.getFullYear()}-${(localDate.getMonth() + 1).toString().padStart(2, '0')}-${localDate.getDate().toString().padStart(2, '0')}-${localDate.getHours().toString().padStart(2, '0')}`;
+                
+                // Convert from meters to inches (NWS gives meters)
+                const precipInches = obs.properties.precipitationLastHour.value * 39.3701;
+                
+                precipMap.set(key, {
+                  value: precipInches,
+                  originalTimestamp: timestamp
+                });
+              }
+            });
+            
+            if (precipMap.size > 0) {
+              console.log(`✅ NWS fallback successful for ${damName}: ${precipMap.size} precipitation readings`);
+              return precipMap;
+            }
+          }
+        }
+      } catch (stationError) {
+        console.log(`⚠️ Station ${stationId} failed: ${stationError.message}`);
+        continue;
+      }
+    }
+    
+    console.log(`⚠️ No precipitation data available from NWS stations for ${damName}`);
+    return new Map();
+    
+  } catch (error) {
+    console.log(`⚠️ NWS precipitation fallback failed for ${damName}:`, error.message);
+    return new Map();
+  }
+}
+
+// Enhanced fetch USACE data function with NWS precipitation fallback
 async function fetchUSACEData(endpoint, parameter, damName) {
   const timeRange = getTimeRange();
   const encodedEndpoint = encodeURIComponent(endpoint);
@@ -343,12 +440,22 @@ async function fetchUSACEData(endpoint, parameter, damName) {
     const response = await makeRequest(url);
     
     if (response.statusCode !== 200) {
+      // If this is precipitation data and USACE fails, try NWS fallback
+      if (parameter === 'Precipitation') {
+        console.log(`⚠️ USACE precipitation API failed for ${damName}, trying NWS fallback...`);
+        return await fetchNWSPrecipitation(damName, timeRange);
+      }
       throw new Error(`USACE API returned status ${response.statusCode} for ${damName} ${parameter}`);
     }
     
     const data = JSON.parse(response.data);
     
     if (!data.values || !Array.isArray(data.values)) {
+      // If this is precipitation data and no USACE data, try NWS fallback
+      if (parameter === 'Precipitation') {
+        console.log(`⚠️ No USACE precipitation values for ${damName}, trying NWS fallback...`);
+        return await fetchNWSPrecipitation(damName, timeRange);
+      }
       console.log(`⚠️ No values found for ${damName} ${parameter}`);
       return new Map();
     }
@@ -368,6 +475,12 @@ async function fetchUSACEData(endpoint, parameter, damName) {
     return dataMap;
     
   } catch (error) {
+    // If this is precipitation data, try NWS fallback
+    if (parameter === 'Precipitation') {
+      console.log(`⚠️ USACE precipitation error for ${damName}, trying NWS fallback:`, error.message);
+      return await fetchNWSPrecipitation(damName, timeRange);
+    }
+    
     console.log(`⚠️ Error fetching ${damName} ${parameter} data:`, error.message);
     return new Map();
   }
