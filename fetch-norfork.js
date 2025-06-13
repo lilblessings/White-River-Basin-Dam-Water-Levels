@@ -233,31 +233,17 @@ const calculateStoragePercentage = (waterLevel, specs, damName) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL);
-  const floodPool = parseFloat(specs.floodPool);
-  const mwl = parseFloat(specs.MWL);
-  const deadLevel = parseFloat(specs.deadStorageLevel);
+  const frl = parseFloat(specs.FRL);           // 0% - Top of conservation pool
+  const mwl = parseFloat(specs.MWL);           // 100% - Top of flood pool
   
-  if (level <= deadLevel) {
+  if (level <= frl) {
     return '0.00';
-  } else if (level <= floodPool) {
-    // Below flood pool (0% to 100%)
-    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
-    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : damName === 'tablerock' ? 2.3 : 2.2);
-    const percentage = storageRatio * 100;
+  } else if (level <= mwl) {
+    // 0% to 100% between FRL and MWL
+    const percentage = ((level - frl) / (mwl - frl)) * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
-    // Above flood pool (100%+) - emergency/surcharge storage
-    const baseStorage = 100;
-    const surchargeDepth = level - floodPool;
-    const maxSurchargeDepth = mwl - floodPool;
-    
-    if (maxSurchargeDepth > 0) {
-      const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
-      const additionalSurcharge = surchargeRatio * 15;
-      return Math.min(115, baseStorage + additionalSurcharge).toFixed(2);
-    }
-    
+    // Above MWL - emergency storage (100%+)
     return '100.00';
   }
 };
