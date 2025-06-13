@@ -70,22 +70,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'greersferry': {
-    MWL: '470.00', // Top of flood control pool
+    MWL: '487.00', // Top of flood control pool
     MWLUnit: 'ft',
     FRL: '462.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '470.00',
+    floodPool: '463.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,100,000', // Storage at conservation pool
+    liveStorageAtFRL: '1,400,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
     liveStorageAtFloodPool: '1,400,000', // Total storage
-    ruleLevel: '430.00', // Estimated minimum operating level
+    ruleLevel: '435.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '462.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '466.00', // Mid flood pool
+    orangeLevel: '470.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '470.00', // Top of flood pool
+    redLevel: '487.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '380.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
