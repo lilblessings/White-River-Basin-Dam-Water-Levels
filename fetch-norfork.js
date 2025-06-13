@@ -512,6 +512,8 @@ function processIncrementalRainfall(precipitationMap, allTimestamps) {
   
   // Second pass: calculate incremental rainfall
   let previousValue = null;
+  let debugCount = 0;
+  
   sortedTimestamps.forEach(timestamp => {
     if (filledMap.has(timestamp)) {
       const currentReading = filledMap.get(timestamp);
@@ -524,18 +526,26 @@ function processIncrementalRainfall(precipitationMap, allTimestamps) {
           value: increment,
           originalTimestamp: typeof currentReading === 'object' ? currentReading.originalTimestamp : null
         });
+        
+        // Debug first few calculations
+        if (debugCount < 5) {
+          console.log(`🌧️ Rainfall debug ${timestamp}: current=${currentValue.toFixed(2)}, previous=${previousValue.toFixed(2)}, increment=${increment.toFixed(2)}`);
+          debugCount++;
+        }
       } else {
         // First reading - assume no previous rainfall
         incrementalMap.set(timestamp, {
           value: 0,
           originalTimestamp: typeof currentReading === 'object' ? currentReading.originalTimestamp : null
         });
+        console.log(`🌧️ First rainfall reading ${timestamp}: ${currentValue.toFixed(2)} (setting to 0 for first hour)`);
       }
       
       previousValue = currentValue;
     }
   });
   
+  console.log(`🌧️ Processed ${incrementalMap.size} rainfall increments (filled ${fillCount} gaps)`);
   return { incrementalMap, fillCount };
 }
 
@@ -562,10 +572,10 @@ const fetchDamData = async (damName) => {
       return null;
     }
 
-    // Process rainfall data to calculate incremental values
+    // Process rainfall data to calculate incremental values (needs chronological order)
     const { incrementalMap: incrementalPrecipitation } = processIncrementalRainfall(usaceData.precipitation, allTimestamps);
 
-    const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first
+    const sortedTimestamps = Array.from(allTimestamps).sort().reverse(); // newest first for display
     console.log(`📊 Processing ${sortedTimestamps.length} hourly data points for ${damName}...`);
 
     const specs = damSpecs[damName];
