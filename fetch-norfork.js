@@ -10,8 +10,7 @@ const damCoordinates = {
   'greersferry': { latitude: 35.4939, longitude: -92.0647 },
   'tablerock': { latitude: 36.6117, longitude: -93.2951 },
   'beaver': { latitude: 36.4625, longitude: -93.8542 },
-  'clearwater': { latitude: 36.0417, longitude: -90.1536 },
-  'whiteriver': { latitude: 36.2000, longitude: -92.3000 } // White River below Bull Shoals
+  'clearwater': { latitude: 36.0417, longitude: -90.1536 }
 };
 
 // Map official names to display names
@@ -21,8 +20,7 @@ const Names = {
   'GREERS_FERRY': 'Greers Ferry',
   'TABLE_ROCK': 'Table Rock',
   'BEAVER': 'Beaver',
-  'CLEARWATER': 'Clearwater',
-  'WHITERIVER': 'White River'
+  'CLEARWATER': 'Clearwater'
 };
 
 // Dam specifications
@@ -164,30 +162,6 @@ const damSpecs = {
     deadStorageLevelUnit: 'ft',
     surfaceArea: '1,860', // At normal pool
     surfaceAreaUnit: 'acres'
-  },
-  'whiteriver': {
-    MWL: '15.00', // Flood stage
-    MWLUnit: 'ft',
-    FRL: '10.00', // Action stage
-    FRLUnit: 'ft',
-    floodPool: '15.00',
-    floodPoolUnit: 'ft',
-    liveStorageAtFRL: '0', // Not applicable for rivers
-    liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '0',
-    ruleLevel: '5.00', // Normal stage
-    ruleLevelUnit: 'ft',
-    blueLevel: '5.00', // Normal flow
-    blueLevelUnit: 'ft',
-    orangeLevel: '12.00', // Minor flood
-    orangeLevelUnit: 'ft',
-    redLevel: '15.00', // Major flood
-    redLevelUnit: 'ft',
-    deadStorageLevel: '0.00',
-    deadStorageLevelUnit: 'ft',
-    surfaceArea: '0',
-    surfaceAreaUnit: 'acres',
-    type: 'river' // This marks it as a river
   }
 };
 
@@ -251,15 +225,6 @@ const API_ENDPOINTS = {
     storage: 'Clearwater_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
     powerGeneration: 'Clearwater_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
     precipitation: 'Clearwater_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
-  },
-  whiteriver: {
-    waterLevel: 'St_Joe.Stage.Inst.1Hour.0.Decodes-raw', // Primary gauge for stage
-    inflow: 'Harriet.Flow.Inst.1Hour.0.CCP-Comp', // Upstream gauge flow
-    totalOutflow: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Downstream gauge flow
-    spillwayFlow: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Same as total for rivers
-    storage: 'St_Joe.Stage.Inst.1Hour.0.Decodes-raw', // Use stage for storage calc
-    powerGeneration: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Not applicable, use flow
-    precipitation: 'St_Joe.Precip-Cum.Inst.1Hour.0.Decodes-raw' // Precipitation data
   }
 };
 
@@ -309,9 +274,6 @@ const calculateLiveStorage = (waterLevel, specs, damName) => {
   } else if (damName === 'clearwater') {
     conservationStorage = 150000; // acre-feet at 359 ft
     floodPoolStorage = 210000; // acre-feet at 384 ft
-  } else if (damName === 'whiteriver') {
-    conservationStorage = 0; // Not applicable for rivers
-    floodPoolStorage = 0; // Not applicable for rivers
   } else {
     conservationStorage = 1983000; // acre-feet at 552 ft (Norfork)
     floodPoolStorage = 2580000; // acre-feet at 580 ft
@@ -586,10 +548,6 @@ async function fetchLakeWaterTemperature(damName) {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-beaver-lake';
   } else if (damName === 'clearwater') {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-clearwater-lake';
-  } else if (damName === 'whiteriver') {
-    // For rivers, we might not have a specific temperature URL, or use a nearby lake
-    console.log(`⚠️ No temperature URL configured for ${damName}`);
-    return '0';
   } else {
     console.log(`⚠️ No temperature URL configured for ${damName}`);
     return '0';
@@ -859,7 +817,7 @@ const fetchDamData = async (damName) => {
     const coordinates = damCoordinates[damName];
 
     const damData = {
-      id: damName === 'norfork' ? '1' : damName === 'bullshoals' ? '2' : damName === 'greersferry' ? '3' : damName === 'tablerock' ? '4' : damName === 'beaver' ? '5' : damName === 'clearwater' ? '6' : '7',
+      id: damName === 'norfork' ? '1' : damName === 'bullshoals' ? '2' : damName === 'greersferry' ? '3' : damName === 'tablerock' ? '4' : damName === 'beaver' ? '5' : '6',
       name: displayName,
       officialName: damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS').replace('GREERSFERRY', 'GREERS_FERRY').replace('TABLEROCK', 'TABLE_ROCK'),
       MWL: specs.MWL,
@@ -871,7 +829,6 @@ const fetchDamData = async (damName) => {
       redLevel: specs.redLevel,
       latitude: coordinates.latitude,
       longitude: coordinates.longitude,
-      type: specs.type, // Add the type field (river vs dam)
       data: allDataPoints
     };
 
@@ -900,8 +857,8 @@ async function fetchDamDetails() {
       await fs.mkdir(folderName);
     }
 
-    // Fetch data for all dams and rivers
-    const damNames = ['norfork', 'bullshoals', 'greersferry', 'tablerock', 'beaver', 'clearwater', 'whiteriver'];
+    // Fetch data for all dams
+    const damNames = ['norfork', 'bullshoals', 'greersferry', 'tablerock', 'beaver', 'clearwater'];
     const dams = [];
     
     for (const damName of damNames) {
@@ -1004,8 +961,7 @@ async function fetchDamDetails() {
             orangeLevel: newDam.orangeLevel,
             redLevel: newDam.redLevel,
             latitude: newDam.latitude,
-            longitude: newDam.longitude,
-            type: newDam.type
+            longitude: newDam.longitude
           });
         } else {
           console.log(`   ⏭️  ${newDam.name}: All hourly data already exists and is complete`);
@@ -1084,7 +1040,6 @@ async function fetchDamDetails() {
           redLevel: dam.redLevel,
           latitude: dam.latitude,
           longitude: dam.longitude,
-          type: dam.type, // Include type field for rivers
           data: [dam.data[0]] // ONLY the latest entry (first in array since sorted newest first)
         }));
 
