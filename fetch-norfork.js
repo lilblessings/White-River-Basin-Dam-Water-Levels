@@ -1,25 +1,5 @@
-// Run the scraper
-if (require.main === module) {
-  // Check if we want to run with cron scheduling
-  const args = process.argv.slice(2);
-  const useCron = args.includes('--cron');
-  
-  if (useCron) {
-    console.log('🕐 Starting Dam Data Scraper with cron scheduling (every 30 minutes)...');
-    console.log('⏰ Next run will be at the next 30-minute mark (e.g., 1:00, 1:30, 2:00, etc.)');
-    
-    // Schedule to run every 30 minutes
-    cron.schedule('*/30 * * * *', async () => {
-      const now = new Date();
-      console.log(`\n🚀 [${now.toISOString()}] Starting scheduled dam data fetch...`);
-      
-      try {
-        await fetchDamDetails();
-        console.log(`✅ [${now.toISOString()}] Scheduled fetch completed successfully.`);
-      } catch (error) {
-        console.error(`❌ [${now.toIconst fs = require('fs').promises;
+const fs = require('fs').promises;
 const https = require('https');
-const cron = require('node-cron');
 
 const folderName = 'historic_data';
 
@@ -73,13 +53,13 @@ const damSpecs = {
   'bullshoals': {
     MWL: '695.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '654.00', // Top of conservation pool (power pool)
+    FRL: '662.00', // Top of conservation pool (power pool)
     FRLUnit: 'ft',
     floodPool: '695.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '3,400,000', // Power drawdown storage
+    liveStorageAtFRL: '5,408,000', // Power drawdown storage
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '5,760,000', // Total storage
+    liveStorageAtFloodPool: '5,408,000', // Total storage
     ruleLevel: '630.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '654.00', // Conservation pool
@@ -94,22 +74,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'greersferry': {
-    MWL: '470.00', // Top of flood control pool
+    MWL: '487.00', // Top of flood control pool
     MWLUnit: 'ft',
     FRL: '462.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '470.00',
+    floodPool: '487.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,100,000', // Storage at conservation pool
+    liveStorageAtFRL: '2,844,500', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '1,400,000', // Total storage
-    ruleLevel: '430.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '2,844,500', // Total storage
+    ruleLevel: '435.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '462.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '466.00', // Mid flood pool
+    orangeLevel: '475.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '470.00', // Top of flood pool
+    redLevel: '487.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '380.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
@@ -119,11 +99,11 @@ const damSpecs = {
   'tablerock': {
     MWL: '931.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '915.00', // Top of conservation pool (normal pool)
+    FRL: '917.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '931.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,500,000', // Storage at conservation pool
+    liveStorageAtFRL: '3,462,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
     liveStorageAtFloodPool: '3,462,000', // Total storage
     ruleLevel: '880.00', // Estimated minimum operating level
@@ -142,14 +122,14 @@ const damSpecs = {
   'beaver': {
     MWL: '1130.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '1120.00', // Top of conservation pool (normal pool)
+    FRL: '1,121.43', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '1130.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,590,000', // Storage at conservation pool
+    liveStorageAtFRL: '1,947,382', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '2,250,000', // Total storage
-    ruleLevel: '1080.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '1,947,382', // Total storage
+    ruleLevel: '1077.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '1120.00', // Conservation pool
     blueLevelUnit: 'ft',
@@ -163,22 +143,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'clearwater': {
-    MWL: '384.00', // Top of flood control pool
+    MWL: '567.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '359.00', // Top of conservation pool (normal pool)
+    FRL: '497.82', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '384.00',
+    floodPool: '567.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '150,000', // Storage at conservation pool
+    liveStorageAtFRL: '413,700', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '210,000', // Total storage
+    liveStorageAtFloodPool: '413,700', // Total storage
     ruleLevel: '320.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
-    blueLevel: '359.00', // Conservation pool
+    blueLevel: '497.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '371.00', // Mid flood pool
+    orangeLevel: '560.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '384.00', // Top of flood pool
+    redLevel: '567.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '280.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
@@ -288,31 +268,17 @@ const calculateStoragePercentage = (waterLevel, specs, damName) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL);
-  const floodPool = parseFloat(specs.floodPool);
-  const mwl = parseFloat(specs.MWL);
-  const deadLevel = parseFloat(specs.deadStorageLevel);
+  const frl = parseFloat(specs.FRL);           // 0% - Top of conservation pool
+  const mwl = parseFloat(specs.MWL);           // 100% - Top of flood pool
   
-  if (level <= deadLevel) {
+  if (level <= frl) {
     return '0.00';
-  } else if (level <= floodPool) {
-    // Below flood pool (0% to 100%)
-    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
-    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : damName === 'tablerock' ? 2.3 : 2.2);
-    const percentage = storageRatio * 100;
+  } else if (level <= mwl) {
+    // 0% to 100% between FRL and MWL
+    const percentage = ((level - frl) / (mwl - frl)) * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
-    // Above flood pool (100%+) - emergency/surcharge storage
-    const baseStorage = 100;
-    const surchargeDepth = level - floodPool;
-    const maxSurchargeDepth = mwl - floodPool;
-    
-    if (maxSurchargeDepth > 0) {
-      const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
-      const additionalSurcharge = surchargeRatio * 15;
-      return Math.min(115, baseStorage + additionalSurcharge).toFixed(2);
-    }
-    
+    // Above MWL - emergency storage (100%+)
     return '100.00';
   }
 };
@@ -1038,7 +1004,8 @@ async function fetchDamDetails() {
             orangeLevel: newDam.orangeLevel,
             redLevel: newDam.redLevel,
             latitude: newDam.latitude,
-            longitude: newDam.longitude
+            longitude: newDam.longitude,
+            type: newDam.type
           });
         } else {
           console.log(`   ⏭️  ${newDam.name}: All hourly data already exists and is complete`);
@@ -1117,6 +1084,7 @@ async function fetchDamDetails() {
           redLevel: dam.redLevel,
           latitude: dam.latitude,
           longitude: dam.longitude,
+          type: dam.type, // Include type field for rivers
           data: [dam.data[0]] // ONLY the latest entry (first in array since sorted newest first)
         }));
 
