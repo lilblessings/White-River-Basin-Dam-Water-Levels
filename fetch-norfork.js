@@ -1,5 +1,25 @@
-const fs = require('fs').promises;
+// Run the scraper
+if (require.main === module) {
+  // Check if we want to run with cron scheduling
+  const args = process.argv.slice(2);
+  const useCron = args.includes('--cron');
+  
+  if (useCron) {
+    console.log('🕐 Starting Dam Data Scraper with cron scheduling (every 30 minutes)...');
+    console.log('⏰ Next run will be at the next 30-minute mark (e.g., 1:00, 1:30, 2:00, etc.)');
+    
+    // Schedule to run every 30 minutes
+    cron.schedule('*/30 * * * *', async () => {
+      const now = new Date();
+      console.log(`\n🚀 [${now.toISOString()}] Starting scheduled dam data fetch...`);
+      
+      try {
+        await fetchDamDetails();
+        console.log(`✅ [${now.toISOString()}] Scheduled fetch completed successfully.`);
+      } catch (error) {
+        console.error(`❌ [${now.toIconst fs = require('fs').promises;
 const https = require('https');
+const cron = require('node-cron');
 
 const folderName = 'historic_data';
 
@@ -10,7 +30,8 @@ const damCoordinates = {
   'greersferry': { latitude: 35.4939, longitude: -92.0647 },
   'tablerock': { latitude: 36.6117, longitude: -93.2951 },
   'beaver': { latitude: 36.4625, longitude: -93.8542 },
-  'clearwater': { latitude: 36.0417, longitude: -90.1536 }
+  'clearwater': { latitude: 36.0417, longitude: -90.1536 },
+  'whiteriver': { latitude: 36.2000, longitude: -92.3000 } // White River below Bull Shoals
 };
 
 // Map official names to display names
@@ -20,7 +41,8 @@ const Names = {
   'GREERS_FERRY': 'Greers Ferry',
   'TABLE_ROCK': 'Table Rock',
   'BEAVER': 'Beaver',
-  'CLEARWATER': 'Clearwater'
+  'CLEARWATER': 'Clearwater',
+  'WHITERIVER': 'White River'
 };
 
 // Dam specifications
@@ -51,13 +73,13 @@ const damSpecs = {
   'bullshoals': {
     MWL: '695.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '662.00', // Top of conservation pool (power pool)
+    FRL: '654.00', // Top of conservation pool (power pool)
     FRLUnit: 'ft',
     floodPool: '695.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '5,408,000', // Power drawdown storage
+    liveStorageAtFRL: '3,400,000', // Power drawdown storage
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '5,408,000', // Total storage
+    liveStorageAtFloodPool: '5,760,000', // Total storage
     ruleLevel: '630.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '654.00', // Conservation pool
@@ -72,22 +94,22 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'greersferry': {
-    MWL: '487.00', // Top of flood control pool
+    MWL: '470.00', // Top of flood control pool
     MWLUnit: 'ft',
     FRL: '462.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '487.00',
+    floodPool: '470.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '2,844,500', // Storage at conservation pool
+    liveStorageAtFRL: '1,100,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '2,844,500', // Total storage
-    ruleLevel: '435.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '1,400,000', // Total storage
+    ruleLevel: '430.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '462.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '475.00', // Mid flood pool
+    orangeLevel: '466.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '487.00', // Top of flood pool
+    redLevel: '470.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '380.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
@@ -97,11 +119,11 @@ const damSpecs = {
   'tablerock': {
     MWL: '931.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '917.00', // Top of conservation pool (normal pool)
+    FRL: '915.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '931.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '3,462,000', // Storage at conservation pool
+    liveStorageAtFRL: '2,500,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
     liveStorageAtFloodPool: '3,462,000', // Total storage
     ruleLevel: '880.00', // Estimated minimum operating level
@@ -120,14 +142,14 @@ const damSpecs = {
   'beaver': {
     MWL: '1130.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '1,121.43', // Top of conservation pool (normal pool)
+    FRL: '1120.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
     floodPool: '1130.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '1,947,382', // Storage at conservation pool
+    liveStorageAtFRL: '1,590,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '1,947,382', // Total storage
-    ruleLevel: '1077.00', // Estimated minimum operating level
+    liveStorageAtFloodPool: '2,250,000', // Total storage
+    ruleLevel: '1080.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
     blueLevel: '1120.00', // Conservation pool
     blueLevelUnit: 'ft',
@@ -141,27 +163,51 @@ const damSpecs = {
     surfaceAreaUnit: 'acres'
   },
   'clearwater': {
-    MWL: '567.00', // Top of flood control pool
+    MWL: '384.00', // Top of flood control pool
     MWLUnit: 'ft',
-    FRL: '497.82', // Top of conservation pool (normal pool)
+    FRL: '359.00', // Top of conservation pool (normal pool)
     FRLUnit: 'ft',
-    floodPool: '567.00',
+    floodPool: '384.00',
     floodPoolUnit: 'ft',
-    liveStorageAtFRL: '413,700', // Storage at conservation pool
+    liveStorageAtFRL: '150,000', // Storage at conservation pool
     liveStorageAtFRLUnit: 'acre-ft',
-    liveStorageAtFloodPool: '413,700', // Total storage
+    liveStorageAtFloodPool: '210,000', // Total storage
     ruleLevel: '320.00', // Estimated minimum operating level
     ruleLevelUnit: 'ft',
-    blueLevel: '497.00', // Conservation pool
+    blueLevel: '359.00', // Conservation pool
     blueLevelUnit: 'ft',
-    orangeLevel: '560.00', // Mid flood pool
+    orangeLevel: '371.00', // Mid flood pool
     orangeLevelUnit: 'ft',
-    redLevel: '567.00', // Top of flood pool
+    redLevel: '384.00', // Top of flood pool
     redLevelUnit: 'ft',
     deadStorageLevel: '280.00', // Estimated dead storage level
     deadStorageLevelUnit: 'ft',
     surfaceArea: '1,860', // At normal pool
     surfaceAreaUnit: 'acres'
+  },
+  'whiteriver': {
+    MWL: '15.00', // Flood stage
+    MWLUnit: 'ft',
+    FRL: '10.00', // Action stage
+    FRLUnit: 'ft',
+    floodPool: '15.00',
+    floodPoolUnit: 'ft',
+    liveStorageAtFRL: '0', // Not applicable for rivers
+    liveStorageAtFRLUnit: 'acre-ft',
+    liveStorageAtFloodPool: '0',
+    ruleLevel: '5.00', // Normal stage
+    ruleLevelUnit: 'ft',
+    blueLevel: '5.00', // Normal flow
+    blueLevelUnit: 'ft',
+    orangeLevel: '12.00', // Minor flood
+    orangeLevelUnit: 'ft',
+    redLevel: '15.00', // Major flood
+    redLevelUnit: 'ft',
+    deadStorageLevel: '0.00',
+    deadStorageLevelUnit: 'ft',
+    surfaceArea: '0',
+    surfaceAreaUnit: 'acres',
+    type: 'river' // This marks it as a river
   }
 };
 
@@ -225,6 +271,15 @@ const API_ENDPOINTS = {
     storage: 'Clearwater_Dam-Headwater.Stor-Res.Inst.1Hour.0.CCP-Comp',
     powerGeneration: 'Clearwater_Dam.Energy-Gen_Plant.Total.1Hour.1Hour.CCP-Comp',
     precipitation: 'Clearwater_Dam.Precip-Cum.Inst.1Hour.0.Decodes-rev'
+  },
+  whiteriver: {
+    waterLevel: 'St_Joe.Stage.Inst.1Hour.0.Decodes-raw', // Primary gauge for stage
+    inflow: 'Harriet.Flow.Inst.1Hour.0.CCP-Comp', // Upstream gauge flow
+    totalOutflow: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Downstream gauge flow
+    spillwayFlow: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Same as total for rivers
+    storage: 'St_Joe.Stage.Inst.1Hour.0.Decodes-raw', // Use stage for storage calc
+    powerGeneration: 'St_Joe.Flow.Inst.1Hour.0.CCP-Comp', // Not applicable, use flow
+    precipitation: 'St_Joe.Precip-Cum.Inst.1Hour.0.Decodes-raw' // Precipitation data
   }
 };
 
@@ -233,17 +288,31 @@ const calculateStoragePercentage = (waterLevel, specs, damName) => {
   if (!waterLevel || !specs) return '0.00';
   
   const level = parseFloat(waterLevel);
-  const frl = parseFloat(specs.FRL);           // 0% - Top of conservation pool
-  const mwl = parseFloat(specs.MWL);           // 100% - Top of flood pool
+  const frl = parseFloat(specs.FRL);
+  const floodPool = parseFloat(specs.floodPool);
+  const mwl = parseFloat(specs.MWL);
+  const deadLevel = parseFloat(specs.deadStorageLevel);
   
-  if (level <= frl) {
+  if (level <= deadLevel) {
     return '0.00';
-  } else if (level <= mwl) {
-    // 0% to 100% between FRL and MWL
-    const percentage = ((level - frl) / (mwl - frl)) * 100;
+  } else if (level <= floodPool) {
+    // Below flood pool (0% to 100%)
+    const depthRatio = (level - deadLevel) / (floodPool - deadLevel);
+    const storageRatio = Math.pow(depthRatio, damName === 'bullshoals' ? 2.5 : damName === 'tablerock' ? 2.3 : 2.2);
+    const percentage = storageRatio * 100;
     return Math.max(0, Math.min(100, percentage)).toFixed(2);
   } else {
-    // Above MWL - emergency storage (100%+)
+    // Above flood pool (100%+) - emergency/surcharge storage
+    const baseStorage = 100;
+    const surchargeDepth = level - floodPool;
+    const maxSurchargeDepth = mwl - floodPool;
+    
+    if (maxSurchargeDepth > 0) {
+      const surchargeRatio = Math.min(1, surchargeDepth / maxSurchargeDepth);
+      const additionalSurcharge = surchargeRatio * 15;
+      return Math.min(115, baseStorage + additionalSurcharge).toFixed(2);
+    }
+    
     return '100.00';
   }
 };
@@ -274,6 +343,9 @@ const calculateLiveStorage = (waterLevel, specs, damName) => {
   } else if (damName === 'clearwater') {
     conservationStorage = 150000; // acre-feet at 359 ft
     floodPoolStorage = 210000; // acre-feet at 384 ft
+  } else if (damName === 'whiteriver') {
+    conservationStorage = 0; // Not applicable for rivers
+    floodPoolStorage = 0; // Not applicable for rivers
   } else {
     conservationStorage = 1983000; // acre-feet at 552 ft (Norfork)
     floodPoolStorage = 2580000; // acre-feet at 580 ft
@@ -548,6 +620,10 @@ async function fetchLakeWaterTemperature(damName) {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-beaver-lake';
   } else if (damName === 'clearwater') {
     temperatureUrl = 'https://seatemperature.net/lakes/water-temp-in-clearwater-lake';
+  } else if (damName === 'whiteriver') {
+    // For rivers, we might not have a specific temperature URL, or use a nearby lake
+    console.log(`⚠️ No temperature URL configured for ${damName}`);
+    return '0';
   } else {
     console.log(`⚠️ No temperature URL configured for ${damName}`);
     return '0';
@@ -817,7 +893,7 @@ const fetchDamData = async (damName) => {
     const coordinates = damCoordinates[damName];
 
     const damData = {
-      id: damName === 'norfork' ? '1' : damName === 'bullshoals' ? '2' : damName === 'greersferry' ? '3' : damName === 'tablerock' ? '4' : damName === 'beaver' ? '5' : '6',
+      id: damName === 'norfork' ? '1' : damName === 'bullshoals' ? '2' : damName === 'greersferry' ? '3' : damName === 'tablerock' ? '4' : damName === 'beaver' ? '5' : damName === 'clearwater' ? '6' : '7',
       name: displayName,
       officialName: damName.toUpperCase().replace('BULLSHOALS', 'BULL_SHOALS').replace('GREERSFERRY', 'GREERS_FERRY').replace('TABLEROCK', 'TABLE_ROCK'),
       MWL: specs.MWL,
@@ -829,6 +905,7 @@ const fetchDamData = async (damName) => {
       redLevel: specs.redLevel,
       latitude: coordinates.latitude,
       longitude: coordinates.longitude,
+      type: specs.type, // Add the type field (river vs dam)
       data: allDataPoints
     };
 
@@ -857,8 +934,8 @@ async function fetchDamDetails() {
       await fs.mkdir(folderName);
     }
 
-    // Fetch data for all dams
-    const damNames = ['norfork', 'bullshoals', 'greersferry', 'tablerock', 'beaver', 'clearwater'];
+    // Fetch data for all dams and rivers
+    const damNames = ['norfork', 'bullshoals', 'greersferry', 'tablerock', 'beaver', 'clearwater', 'whiteriver'];
     const dams = [];
     
     for (const damName of damNames) {
