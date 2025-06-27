@@ -103,7 +103,7 @@
                     "timestamp": "2025-06-27T04:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.063",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "72°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -160,21 +160,21 @@
             "longitude": -93.8542,
             "data": [
                 {
-                    "date": "26.06.2025",
-                    "time": "22:00",
+                    "date": "27.06.2025",
+                    "time": "00:00",
                     "waterLevel": "1128.77",
                     "liveStorage": "1,908,665",
                     "storagePercentage": "99.89%",
-                    "inflow": "409",
+                    "inflow": "339",
                     "powerHouseDischarge": "20",
                     "spillwayRelease": "0",
                     "totalOutflow": "20",
                     "powerGeneration": "1",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-06-27T03:00:00Z",
-                    "netFlow": 388,
-                    "turbineEfficiency": "0.048",
+                    "timestamp": "2025-06-27T05:00:00Z",
+                    "netFlow": 319,
+                    "turbineEfficiency": "0.043",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "72°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
@@ -211,7 +211,7 @@
                     "timestamp": "2025-06-27T04:00:00Z",
                     "netFlow": 0,
                     "turbineEfficiency": "0.000",
-                    "hasForwardFilledRainfall": true,
+                    "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "72°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
