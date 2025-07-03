@@ -28,7 +28,7 @@
             "timestamp": "2025-07-03T20:00:00Z",
             "netFlow": -3706,
             "turbineEfficiency": "0.015",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -148,7 +148,7 @@
             "timestamp": "2025-07-03T14:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.044",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -168,7 +168,7 @@
             "timestamp": "2025-07-03T13:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.044",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -188,7 +188,7 @@
             "timestamp": "2025-07-03T12:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.042",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -208,7 +208,7 @@
             "timestamp": "2025-07-03T11:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.043",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -228,7 +228,7 @@
             "timestamp": "2025-07-03T10:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.044",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -248,7 +248,7 @@
             "timestamp": "2025-07-03T09:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.046",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -268,7 +268,7 @@
             "timestamp": "2025-07-03T08:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.045",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -288,7 +288,7 @@
             "timestamp": "2025-07-03T07:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.043",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -308,7 +308,7 @@
             "timestamp": "2025-07-03T06:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.043",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -328,7 +328,7 @@
             "timestamp": "2025-07-03T05:00:00Z",
             "netFlow": -20,
             "turbineEfficiency": "0.044",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -398,7 +398,7 @@
             "waterLevel": "1128.54",
             "liveStorage": "1,901,485",
             "storagePercentage": "99.87%",
-            "inflow": "257",
+            "inflow": "1",
             "powerHouseDischarge": "3625",
             "spillwayRelease": "0",
             "totalOutflow": "3625",
@@ -406,9 +406,9 @@
             "rainfall": "0.00",
             "dataSource": "USACE CDA API (Official)",
             "timestamp": "2025-07-03T01:00:00Z",
-            "netFlow": -3368,
+            "netFlow": -3624,
             "turbineEfficiency": "0.015",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "76°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
