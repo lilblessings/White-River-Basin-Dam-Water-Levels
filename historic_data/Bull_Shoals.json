@@ -14,6 +14,26 @@
     "data": [
         {
             "date": "19.07.2025",
+            "time": "18:00",
+            "waterLevel": "686.65",
+            "liveStorage": "4,838,575",
+            "storagePercentage": "74.70%",
+            "inflow": "11360",
+            "powerHouseDischarge": "19347",
+            "spillwayRelease": "0",
+            "totalOutflow": "19347",
+            "powerGeneration": "330",
+            "rainfall": "0.00",
+            "dataSource": "USACE CDA API (Official)",
+            "timestamp": "2025-07-19T23:00:00Z",
+            "netFlow": -7987,
+            "turbineEfficiency": "0.017",
+            "hasForwardFilledRainfall": false,
+            "lakeWaterTemp": "69°F",
+            "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
+        },
+        {
+            "date": "19.07.2025",
             "time": "17:00",
             "waterLevel": "686.65",
             "liveStorage": "4,838,575",
