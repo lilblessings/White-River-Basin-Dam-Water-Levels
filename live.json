@@ -89,20 +89,20 @@
             "data": [
                 {
                     "date": "15.08.2025",
-                    "time": "17:00",
-                    "waterLevel": "461.75",
-                    "liveStorage": "1,933,810",
+                    "time": "18:00",
+                    "waterLevel": "461.71",
+                    "liveStorage": "1,933,180",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
-                    "powerHouseDischarge": "6264",
+                    "powerHouseDischarge": "6302",
                     "spillwayRelease": "0",
-                    "totalOutflow": "6264",
-                    "powerGeneration": "88",
+                    "totalOutflow": "6302",
+                    "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-08-15T22:00:00Z",
-                    "netFlow": -6264,
-                    "turbineEfficiency": "0.014",
+                    "timestamp": "2025-08-15T23:00:00Z",
+                    "netFlow": -6302,
+                    "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "73°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
@@ -176,7 +176,7 @@
                     "netFlow": -3765,
                     "turbineEfficiency": "0.015",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "77°F",
+                    "lakeWaterTemp": "76°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -199,7 +199,7 @@
                     "date": "15.08.2025",
                     "time": "17:00",
                     "waterLevel": "497.41",
-                    "liveStorage": "25,014",
+                    "liveStorage": "0",
                     "storagePercentage": "0.00%",
                     "inflow": "360",
                     "powerHouseDischarge": "394",
