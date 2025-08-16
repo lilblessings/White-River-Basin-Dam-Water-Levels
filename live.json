@@ -140,7 +140,7 @@
                     "netFlow": -251,
                     "turbineEfficiency": "0.017",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "75°F",
+                    "lakeWaterTemp": "76°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -169,12 +169,12 @@
                     "powerHouseDischarge": "3768",
                     "spillwayRelease": "0",
                     "totalOutflow": "3768",
-                    "powerGeneration": "0",
+                    "powerGeneration": "55",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
                     "timestamp": "2025-08-16T21:00:00Z",
                     "netFlow": -3768,
-                    "turbineEfficiency": "0.000",
+                    "turbineEfficiency": "0.015",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "76°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
