@@ -197,7 +197,7 @@
             "data": [
                 {
                     "date": "16.08.2025",
-                    "time": "06:00",
+                    "time": "07:00",
                     "waterLevel": "497.41",
                     "liveStorage": "24,997",
                     "storagePercentage": "0.00%",
@@ -208,7 +208,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-08-16T11:00:00Z",
+                    "timestamp": "2025-08-16T12:00:00Z",
                     "netFlow": 0,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
