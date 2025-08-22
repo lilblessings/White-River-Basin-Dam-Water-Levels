@@ -22,7 +22,7 @@
             "powerHouseDischarge": "4679",
             "spillwayRelease": "0",
             "totalOutflow": "4679",
-            "powerGeneration": "0",
+            "powerGeneration": "1",
             "rainfall": "0.00",
             "dataSource": "USACE CDA API (Official)",
             "timestamp": "2025-08-22T18:00:00Z",
