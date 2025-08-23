@@ -67,7 +67,7 @@
                     "timestamp": "2025-08-23T05:00:00Z",
                     "netFlow": -9213,
                     "turbineEfficiency": "0.015",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "69°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
