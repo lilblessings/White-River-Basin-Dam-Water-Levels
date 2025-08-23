@@ -127,7 +127,7 @@
                     "date": "23.08.2025",
                     "time": "00:00",
                     "waterLevel": "916.57",
-                    "liveStorage": "2,770,520",
+                    "liveStorage": "0",
                     "storagePercentage": "0.00%",
                     "inflow": "3799",
                     "powerHouseDischarge": "20",
@@ -140,7 +140,7 @@
                     "netFlow": 3779,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "76°F",
+                    "lakeWaterTemp": "77°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -175,7 +175,7 @@
                     "timestamp": "2025-08-23T05:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.027",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "76°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -199,7 +199,7 @@
                     "date": "23.08.2025",
                     "time": "00:00",
                     "waterLevel": "497.24",
-                    "liveStorage": "24,742",
+                    "liveStorage": "0",
                     "storagePercentage": "0.00%",
                     "inflow": "336",
                     "powerHouseDischarge": "322",
@@ -212,7 +212,7 @@
                     "netFlow": 13,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "74°F",
+                    "lakeWaterTemp": "76°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
