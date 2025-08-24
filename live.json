@@ -61,13 +61,13 @@
                     "powerHouseDischarge": "13417",
                     "spillwayRelease": "0",
                     "totalOutflow": "13417",
-                    "powerGeneration": "205",
+                    "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
                     "timestamp": "2025-08-23T05:00:00Z",
                     "netFlow": -9213,
-                    "turbineEfficiency": "0.015",
-                    "hasForwardFilledRainfall": true,
+                    "turbineEfficiency": "0.000",
+                    "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "69°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -103,7 +103,7 @@
                     "timestamp": "2025-08-23T05:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "77°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -175,8 +175,8 @@
                     "timestamp": "2025-08-23T05:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.027",
-                    "hasForwardFilledRainfall": true,
-                    "lakeWaterTemp": "76°F",
+                    "hasForwardFilledRainfall": false,
+                    "lakeWaterTemp": "77°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -199,7 +199,7 @@
                     "date": "23.08.2025",
                     "time": "00:00",
                     "waterLevel": "497.24",
-                    "liveStorage": "0",
+                    "liveStorage": "24,742",
                     "storagePercentage": "0.00%",
                     "inflow": "336",
                     "powerHouseDischarge": "322",
