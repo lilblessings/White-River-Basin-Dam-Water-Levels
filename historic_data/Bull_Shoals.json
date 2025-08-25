@@ -14,6 +14,26 @@
     "data": [
         {
             "date": "25.08.2025",
+            "time": "17:00",
+            "waterLevel": "669.59",
+            "liveStorage": "3,820,860",
+            "storagePercentage": "23.00%",
+            "inflow": "0",
+            "powerHouseDischarge": "17667",
+            "spillwayRelease": "0",
+            "totalOutflow": "17667",
+            "powerGeneration": "284",
+            "rainfall": "0.00",
+            "dataSource": "USACE CDA API (Official)",
+            "timestamp": "2025-08-25T22:00:00Z",
+            "netFlow": -17667,
+            "turbineEfficiency": "0.016",
+            "hasForwardFilledRainfall": true,
+            "lakeWaterTemp": "69°F",
+            "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
+        },
+        {
+            "date": "25.08.2025",
             "time": "16:00",
             "waterLevel": "669.62",
             "liveStorage": "3,823,020",
@@ -28,7 +48,7 @@
             "timestamp": "2025-08-25T21:00:00Z",
             "netFlow": -18309,
             "turbineEfficiency": "0.016",
-            "hasForwardFilledRainfall": false,
+            "hasForwardFilledRainfall": true,
             "lakeWaterTemp": "69°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
@@ -378,7 +398,7 @@
             "waterLevel": "670.05",
             "liveStorage": "3,845,200",
             "storagePercentage": "24.39%",
-            "inflow": "0",
+            "inflow": "8",
             "powerHouseDischarge": "15185",
             "spillwayRelease": "0",
             "totalOutflow": "15185",
@@ -386,10 +406,10 @@
             "rainfall": "0.00",
             "dataSource": "USACE CDA API (Official)",
             "timestamp": "2025-08-25T03:00:00Z",
-            "netFlow": -15185,
+            "netFlow": -15177,
             "turbineEfficiency": "0.016",
             "hasForwardFilledRainfall": false,
-            "lakeWaterTemp": "70°F",
+            "lakeWaterTemp": "69°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
         {
