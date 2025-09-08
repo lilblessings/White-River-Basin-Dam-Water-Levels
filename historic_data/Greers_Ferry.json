@@ -418,7 +418,7 @@
             "waterLevel": "460.56",
             "liveStorage": "1,897,270",
             "storagePercentage": "0.00%",
-            "inflow": "0",
+            "inflow": "1",
             "powerHouseDischarge": "20",
             "spillwayRelease": "0",
             "totalOutflow": "20",
@@ -426,10 +426,10 @@
             "rainfall": "0.00",
             "dataSource": "USACE CDA API (Official)",
             "timestamp": "2025-09-07T17:00:00Z",
-            "netFlow": -20,
+            "netFlow": -19,
             "turbineEfficiency": "0.000",
             "hasForwardFilledRainfall": false,
-            "lakeWaterTemp": "76°F",
+            "lakeWaterTemp": "78°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
         {
