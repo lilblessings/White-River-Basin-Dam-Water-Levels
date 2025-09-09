@@ -16,7 +16,7 @@
             "date": "09.09.2025",
             "time": "16:00",
             "waterLevel": "661.42",
-            "liveStorage": "0",
+            "liveStorage": "3,399,785",
             "storagePercentage": "0.00%",
             "inflow": "0",
             "powerHouseDischarge": "17191",
@@ -29,7 +29,7 @@
             "netFlow": -17191,
             "turbineEfficiency": "0.016",
             "hasForwardFilledRainfall": false,
-            "lakeWaterTemp": "70°F",
+            "lakeWaterTemp": "69°F",
             "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
         },
         {
