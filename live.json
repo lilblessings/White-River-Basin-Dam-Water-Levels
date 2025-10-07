@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "06.10.2025",
+    "lastUpdate": "07.10.2025",
     "dams": [
         {
             "id": "1",
@@ -52,20 +52,20 @@
             "longitude": -92.5833,
             "data": [
                 {
-                    "date": "06.10.2025",
-                    "time": "23:00",
-                    "waterLevel": "658.83",
-                    "liveStorage": "3,271,880",
+                    "date": "07.10.2025",
+                    "time": "00:00",
+                    "waterLevel": "658.79",
+                    "liveStorage": "3,270,920",
                     "storagePercentage": "0.00%",
-                    "inflow": "7607",
-                    "powerHouseDischarge": "3751",
+                    "inflow": "6043",
+                    "powerHouseDischarge": "4393",
                     "spillwayRelease": "0",
-                    "totalOutflow": "3751",
-                    "powerGeneration": "41",
+                    "totalOutflow": "4393",
+                    "powerGeneration": "50",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-07T04:00:00Z",
-                    "netFlow": 3856,
+                    "timestamp": "2025-10-07T05:00:00Z",
+                    "netFlow": 1650,
                     "turbineEfficiency": "0.011",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "68°F",
@@ -88,8 +88,8 @@
             "longitude": -92.0647,
             "data": [
                 {
-                    "date": "06.10.2025",
-                    "time": "23:00",
+                    "date": "07.10.2025",
+                    "time": "00:00",
                     "waterLevel": "458.76",
                     "liveStorage": "1,840,560",
                     "storagePercentage": "0.00%",
@@ -100,7 +100,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-07T04:00:00Z",
+                    "timestamp": "2025-10-07T05:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
