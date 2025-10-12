@@ -17,19 +17,19 @@
             "data": [
                 {
                     "date": "12.10.2025",
-                    "time": "07:00",
+                    "time": "08:00",
                     "waterLevel": "552.23",
                     "liveStorage": "1,185,545",
                     "storagePercentage": "0.82%",
-                    "inflow": "504",
-                    "powerHouseDischarge": "1582",
+                    "inflow": "0",
+                    "powerHouseDischarge": "0",
                     "spillwayRelease": "0",
-                    "totalOutflow": "1582",
+                    "totalOutflow": "0",
                     "powerGeneration": "1",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-12T12:00:00Z",
-                    "netFlow": -1078,
+                    "timestamp": "2025-10-12T13:00:00Z",
+                    "netFlow": 0,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "71°F",
@@ -67,7 +67,7 @@
                     "timestamp": "2025-10-12T12:00:00Z",
                     "netFlow": -3615,
                     "turbineEfficiency": "0.012",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "67°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -161,7 +161,7 @@
             "data": [
                 {
                     "date": "12.10.2025",
-                    "time": "07:00",
+                    "time": "08:00",
                     "waterLevel": "1120.21",
                     "liveStorage": "1,654,052",
                     "storagePercentage": "99.13%",
@@ -172,7 +172,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-12T12:00:00Z",
+                    "timestamp": "2025-10-12T13:00:00Z",
                     "netFlow": 559,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
