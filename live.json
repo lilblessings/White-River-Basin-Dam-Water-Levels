@@ -53,19 +53,19 @@
             "data": [
                 {
                     "date": "19.10.2025",
-                    "time": "17:00",
+                    "time": "18:00",
                     "waterLevel": "656.96",
-                    "liveStorage": "3,184,590",
+                    "liveStorage": "3,183,650",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
-                    "powerHouseDischarge": "4453",
+                    "powerHouseDischarge": "4503",
                     "spillwayRelease": "0",
-                    "totalOutflow": "4453",
-                    "powerGeneration": "59",
+                    "totalOutflow": "4503",
+                    "powerGeneration": "60",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-19T22:00:00Z",
-                    "netFlow": -4453,
+                    "timestamp": "2025-10-19T23:00:00Z",
+                    "netFlow": -4503,
                     "turbineEfficiency": "0.013",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "66°F",
@@ -89,7 +89,7 @@
             "data": [
                 {
                     "date": "19.10.2025",
-                    "time": "17:00",
+                    "time": "18:00",
                     "waterLevel": "457.94",
                     "liveStorage": "1,814,900",
                     "storagePercentage": "0.00%",
@@ -100,11 +100,11 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-19T22:00:00Z",
+                    "timestamp": "2025-10-19T23:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "71°F",
+                    "lakeWaterTemp": "70°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
