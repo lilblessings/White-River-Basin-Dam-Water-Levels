@@ -17,19 +17,19 @@
             "data": [
                 {
                     "date": "24.10.2025",
-                    "time": "05:00",
+                    "time": "06:00",
                     "waterLevel": "550.98",
                     "liveStorage": "0",
                     "storagePercentage": "0.00%",
-                    "inflow": "400",
-                    "powerHouseDischarge": "1582",
+                    "inflow": "64",
+                    "powerHouseDischarge": "1578",
                     "spillwayRelease": "0",
-                    "totalOutflow": "1582",
+                    "totalOutflow": "1578",
                     "powerGeneration": "1",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-24T10:00:00Z",
-                    "netFlow": -1182,
+                    "timestamp": "2025-10-24T11:00:00Z",
+                    "netFlow": -1514,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "66°F",
@@ -89,7 +89,7 @@
             "data": [
                 {
                     "date": "24.10.2025",
-                    "time": "05:00",
+                    "time": "06:00",
                     "waterLevel": "457.58",
                     "liveStorage": "0",
                     "storagePercentage": "0.00%",
@@ -100,7 +100,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-10-24T10:00:00Z",
+                    "timestamp": "2025-10-24T11:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -139,7 +139,7 @@
                     "timestamp": "2025-10-24T11:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
-                    "hasForwardFilledRainfall": false,
+                    "hasForwardFilledRainfall": true,
                     "lakeWaterTemp": "68°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
