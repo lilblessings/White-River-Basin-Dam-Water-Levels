@@ -16,7 +16,7 @@
             "date": "31.10.2025",
             "time": "10:00",
             "waterLevel": "457.45",
-            "liveStorage": "0",
+            "liveStorage": "1,800,500",
             "storagePercentage": "0.00%",
             "inflow": "0",
             "powerHouseDischarge": "20",
