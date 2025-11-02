@@ -125,9 +125,9 @@
             "data": [
                 {
                     "date": "02.11.2025",
-                    "time": "03:00",
+                    "time": "04:00",
                     "waterLevel": "916.57",
-                    "liveStorage": "2,770,080",
+                    "liveStorage": "2,770,520",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
                     "powerHouseDischarge": "20",
@@ -136,7 +136,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-02T08:00:00Z",
+                    "timestamp": "2025-11-02T09:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -161,9 +161,9 @@
             "data": [
                 {
                     "date": "02.11.2025",
-                    "time": "03:00",
+                    "time": "04:00",
                     "waterLevel": "1119.91",
-                    "liveStorage": "1,646,033",
+                    "liveStorage": "1,646,307",
                     "storagePercentage": "99.11%",
                     "inflow": "0",
                     "powerHouseDischarge": "20",
@@ -172,7 +172,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-02T08:00:00Z",
+                    "timestamp": "2025-11-02T09:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
