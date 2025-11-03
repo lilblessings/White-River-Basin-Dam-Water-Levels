@@ -1,5 +1,5 @@
 {
-    "lastUpdate": "02.11.2025",
+    "lastUpdate": "03.11.2025",
     "dams": [
         {
             "id": "1",
@@ -52,20 +52,20 @@
             "longitude": -92.5833,
             "data": [
                 {
-                    "date": "02.11.2025",
-                    "time": "23:00",
+                    "date": "03.11.2025",
+                    "time": "00:00",
                     "waterLevel": "654.95",
                     "liveStorage": "3,092,135",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
-                    "powerHouseDischarge": "2699",
+                    "powerHouseDischarge": "2885",
                     "spillwayRelease": "0",
-                    "totalOutflow": "2699",
-                    "powerGeneration": "35",
+                    "totalOutflow": "2885",
+                    "powerGeneration": "38",
                     "rainfall": "0.01",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-03T04:00:00Z",
-                    "netFlow": -2699,
+                    "timestamp": "2025-11-03T05:00:00Z",
+                    "netFlow": -2885,
                     "turbineEfficiency": "0.013",
                     "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "62°F",
@@ -88,8 +88,8 @@
             "longitude": -92.0647,
             "data": [
                 {
-                    "date": "02.11.2025",
-                    "time": "23:00",
+                    "date": "03.11.2025",
+                    "time": "00:00",
                     "waterLevel": "457.35",
                     "liveStorage": "1,797,200",
                     "storagePercentage": "0.00%",
@@ -100,7 +100,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-03T04:00:00Z",
+                    "timestamp": "2025-11-03T05:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
