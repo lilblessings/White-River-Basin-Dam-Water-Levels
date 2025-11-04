@@ -125,9 +125,9 @@
             "data": [
                 {
                     "date": "04.11.2025",
-                    "time": "17:00",
-                    "waterLevel": "916.70",
-                    "liveStorage": "2,775,800",
+                    "time": "18:00",
+                    "waterLevel": "916.67",
+                    "liveStorage": "2,774,920",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
                     "powerHouseDischarge": "20",
@@ -136,7 +136,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-04T22:00:00Z",
+                    "timestamp": "2025-11-04T23:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -161,7 +161,7 @@
             "data": [
                 {
                     "date": "04.11.2025",
-                    "time": "17:00",
+                    "time": "18:00",
                     "waterLevel": "1119.62",
                     "liveStorage": "1,638,339",
                     "storagePercentage": "99.08%",
@@ -172,7 +172,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-04T22:00:00Z",
+                    "timestamp": "2025-11-04T23:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -197,7 +197,7 @@
             "data": [
                 {
                     "date": "04.11.2025",
-                    "time": "16:00",
+                    "time": "17:00",
                     "waterLevel": "494.49",
                     "liveStorage": "20,350",
                     "storagePercentage": "0.00%",
@@ -208,7 +208,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-04T21:00:00Z",
+                    "timestamp": "2025-11-04T22:00:00Z",
                     "netFlow": -369,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
