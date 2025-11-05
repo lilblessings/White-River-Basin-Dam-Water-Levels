@@ -61,13 +61,13 @@
                     "powerHouseDischarge": "2485",
                     "spillwayRelease": "0",
                     "totalOutflow": "2485",
-                    "powerGeneration": "30",
-                    "rainfall": "0.00",
+                    "powerGeneration": "0",
+                    "rainfall": "0.01",
                     "dataSource": "USACE CDA API (Official)",
                     "timestamp": "2025-11-05T06:00:00Z",
                     "netFlow": -2485,
-                    "turbineEfficiency": "0.012",
-                    "hasForwardFilledRainfall": true,
+                    "turbineEfficiency": "0.000",
+                    "hasForwardFilledRainfall": false,
                     "lakeWaterTemp": "62°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
@@ -125,9 +125,9 @@
             "data": [
                 {
                     "date": "05.11.2025",
-                    "time": "01:00",
+                    "time": "02:00",
                     "waterLevel": "916.70",
-                    "liveStorage": "2,775,360",
+                    "liveStorage": "2,775,800",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
                     "powerHouseDischarge": "20",
@@ -136,7 +136,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-05T06:00:00Z",
+                    "timestamp": "2025-11-05T07:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -161,7 +161,7 @@
             "data": [
                 {
                     "date": "05.11.2025",
-                    "time": "01:00",
+                    "time": "02:00",
                     "waterLevel": "1119.62",
                     "liveStorage": "1,638,065",
                     "storagePercentage": "99.08%",
@@ -172,7 +172,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-05T06:00:00Z",
+                    "timestamp": "2025-11-05T07:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
