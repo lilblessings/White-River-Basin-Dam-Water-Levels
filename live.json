@@ -53,22 +53,22 @@
             "data": [
                 {
                     "date": "12.11.2025",
-                    "time": "16:00",
+                    "time": "17:00",
                     "waterLevel": "653.51",
                     "liveStorage": "3,026,400",
                     "storagePercentage": "0.00%",
-                    "inflow": "2396",
-                    "powerHouseDischarge": "773",
+                    "inflow": "1726",
+                    "powerHouseDischarge": "702",
                     "spillwayRelease": "0",
-                    "totalOutflow": "773",
+                    "totalOutflow": "702",
                     "powerGeneration": "8",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-12T21:00:00Z",
-                    "netFlow": 1623,
-                    "turbineEfficiency": "0.011",
+                    "timestamp": "2025-11-12T22:00:00Z",
+                    "netFlow": 1024,
+                    "turbineEfficiency": "0.012",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "56°F",
+                    "lakeWaterTemp": "55°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -89,7 +89,7 @@
             "data": [
                 {
                     "date": "12.11.2025",
-                    "time": "16:00",
+                    "time": "17:00",
                     "waterLevel": "456.82",
                     "liveStorage": "1,782,200",
                     "storagePercentage": "0.00%",
@@ -100,7 +100,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-11-12T21:00:00Z",
+                    "timestamp": "2025-11-12T22:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
