@@ -89,7 +89,7 @@
             "data": [
                 {
                     "date": "31.12.2025",
-                    "time": "02:00",
+                    "time": "03:00",
                     "waterLevel": "455.28",
                     "liveStorage": "1,735,100",
                     "storagePercentage": "0.00%",
@@ -100,7 +100,7 @@
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2025-12-31T07:00:00Z",
+                    "timestamp": "2025-12-31T08:00:00Z",
                     "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
@@ -127,7 +127,7 @@
                     "date": "31.12.2025",
                     "time": "03:00",
                     "waterLevel": "911.75",
-                    "liveStorage": "2,563,930",
+                    "liveStorage": "0",
                     "storagePercentage": "0.00%",
                     "inflow": "0",
                     "powerHouseDischarge": "1456",
