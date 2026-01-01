@@ -17,22 +17,22 @@
             "data": [
                 {
                     "date": "01.01.2026",
-                    "time": "17:00",
+                    "time": "18:00",
                     "waterLevel": "549.31",
                     "liveStorage": "1,124,413",
                     "storagePercentage": "0.00%",
-                    "inflow": "267",
-                    "powerHouseDischarge": "205",
+                    "inflow": "227",
+                    "powerHouseDischarge": "204",
                     "spillwayRelease": "0",
-                    "totalOutflow": "205",
+                    "totalOutflow": "204",
                     "powerGeneration": "2",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2026-01-01T22:00:00Z",
-                    "netFlow": 62,
+                    "timestamp": "2026-01-01T23:00:00Z",
+                    "netFlow": 23,
                     "turbineEfficiency": "0.009",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "50°F",
+                    "lakeWaterTemp": "49°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -89,22 +89,22 @@
             "data": [
                 {
                     "date": "01.01.2026",
-                    "time": "17:00",
+                    "time": "18:00",
                     "waterLevel": "455.25",
-                    "liveStorage": "1,734,500",
+                    "liveStorage": "1,734,200",
                     "storagePercentage": "0.00%",
-                    "inflow": "20",
+                    "inflow": "0",
                     "powerHouseDischarge": "20",
                     "spillwayRelease": "0",
                     "totalOutflow": "20",
                     "powerGeneration": "0",
                     "rainfall": "0.00",
                     "dataSource": "USACE CDA API (Official)",
-                    "timestamp": "2026-01-01T22:00:00Z",
-                    "netFlow": 0,
+                    "timestamp": "2026-01-01T23:00:00Z",
+                    "netFlow": -20,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "48°F",
+                    "lakeWaterTemp": "47°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
@@ -176,7 +176,7 @@
                     "netFlow": 1771,
                     "turbineEfficiency": "0.000",
                     "hasForwardFilledRainfall": false,
-                    "lakeWaterTemp": "49°F",
+                    "lakeWaterTemp": "47°F",
                     "lakeWaterTempSource": "SeaTemperature.net (Estimated)"
                 }
             ]
